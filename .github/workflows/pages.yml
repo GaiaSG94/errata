@@ -24,7 +24,7 @@ concurrency:
 jobs:
   build:
     name: build-pages
-    runs-on: [self-hosted, linux, x64, rature-worker]
+    runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
@@ -48,8 +48,7 @@ jobs:
       - name: Build (base Pages)
         shell: bash
         env:
-          VITE_BASE: /rature/
-          # Variable de dépôt (publique) : adresse du proxy edge déployé.
+          VITE_BASE: /errata/
           VITE_PROXY_URL: ${{ vars.RATURE_PROXY_URL }}
         run: npm run build
 

@@ -151,3 +151,411 @@ body {
 .balance {
   animation: balance 4s ease-in-out infinite;
 }
+
+.errata-home {
+  --errata-ink: var(--color-texte);
+  margin: -1.25rem -1rem -1.25rem;
+  padding: 0 1rem 1.5rem;
+  background: var(--color-bleu);
+  color: white;
+  position: relative;
+  overflow: hidden;
+}
+
+.errata-home::before,
+.errata-home::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.errata-home::before {
+  background-image: radial-gradient(rgb(255 255 255 / 0.32) 3px, transparent 3.4px);
+  background-size: 30px 30px;
+  opacity: 0.7;
+  mask-image: radial-gradient(70% 60% at 20% 20%, transparent, black 58%);
+}
+
+.errata-home::after {
+  background-image: radial-gradient(rgb(242 165 22 / 0.65) 5px, transparent 5.5px);
+  background-position: 75px 42px;
+  background-size: 190px 190px;
+  opacity: 0.4;
+  mask-image: radial-gradient(58% 50% at 78% 30%, black, transparent 75%);
+}
+
+.errata-home > * {
+  position: relative;
+  z-index: 1;
+}
+
+.errata-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr);
+  align-items: center;
+  gap: 1.5rem;
+  min-height: calc(100dvh - 9rem);
+  padding: 2rem 0 1.5rem;
+}
+
+.errata-hero-copy {
+  position: relative;
+  z-index: 1;
+}
+
+.errata-eyebrow,
+.errata-step-label,
+.errata-card-bar,
+.errata-journey-heading,
+.errata-pipeline-step small {
+  font-family: var(--font-etroite);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.errata-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: white;
+  font-size: 0.75rem;
+  letter-spacing: 0.14em;
+}
+
+.errata-eyebrow i {
+  display: inline-block;
+  width: 1.6rem;
+  height: 0.45rem;
+  border: 2px solid var(--color-texte);
+  background: var(--color-ambre);
+  box-shadow: 2px 2px 0 var(--color-texte);
+}
+
+.errata-hero h1 {
+  margin: 1rem 0 0;
+  color: white;
+  font-size: clamp(3rem, 6.2vw, 6.5rem);
+  text-shadow: 0.3rem 0.3rem 0 var(--color-texte);
+}
+
+.errata-hero .mot-italique {
+  color: var(--color-ambre);
+}
+
+.errata-hero-lede {
+  max-width: 34rem;
+  margin: 1.25rem 0 0;
+  color: rgb(255 255 255 / 0.92);
+  font-size: 1rem;
+}
+
+.errata-hero-actions,
+.errata-proof-stickers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.errata-hero-actions {
+  margin-top: 1.4rem;
+}
+
+.errata-hero-actions .rounded-full {
+  border-radius: 0.9rem;
+  border: 3px solid var(--color-texte);
+  box-shadow: 4px 4px 0 var(--color-texte);
+  font-weight: 800;
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.errata-hero-actions .rounded-full:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 var(--color-texte);
+}
+
+.errata-hero-actions .rounded-full:first-child {
+  background: var(--color-ambre);
+  color: var(--color-texte);
+}
+
+.errata-proof-stickers {
+  margin-top: 1.25rem;
+}
+
+.errata-proof-stickers .sticker {
+  font-size: 0.72rem;
+  box-shadow: 3px 3px 0 var(--color-texte);
+}
+
+.errata-journey {
+  position: relative;
+  z-index: 1;
+  padding: 1rem;
+  border: 3px solid var(--color-texte);
+  border-radius: 1.35rem;
+  background: var(--color-surface);
+  box-shadow: 8px 8px 0 var(--color-texte);
+}
+
+.errata-journey-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+  color: var(--color-muet);
+  font-size: 0.7rem;
+}
+
+.errata-journey-flow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 1.7rem minmax(0, 1fr) 1.7rem minmax(0, 1fr);
+  align-items: stretch;
+  gap: 0.5rem;
+}
+
+.errata-journey-arrow {
+  display: grid;
+  place-items: center;
+  color: var(--color-ambre);
+  font-family: var(--font-etroite);
+  font-size: 1.8rem;
+  font-weight: 900;
+}
+
+.errata-journey-card {
+  min-width: 0;
+  padding: 0.8rem;
+  border: 3px solid var(--color-texte);
+  border-radius: 0.9rem;
+  box-shadow: 4px 4px 0 var(--color-texte);
+}
+
+.errata-copy-card {
+  background: var(--color-surface-2);
+}
+
+.errata-card-bar {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.4rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px dashed var(--color-bord);
+  color: var(--color-faible);
+  font-size: 0.58rem;
+}
+
+.errata-handwriting {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-top: 0.7rem;
+  font-family: var(--font-lecture);
+  font-size: 1rem;
+  line-height: 1.35;
+}
+
+.errata-question {
+  color: var(--color-muet);
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.errata-mark {
+  position: relative;
+  white-space: nowrap;
+}
+
+.errata-mark::after {
+  content: '';
+  position: absolute;
+  right: -0.15rem;
+  bottom: -0.35rem;
+  left: -0.15rem;
+  height: 0.5rem;
+  border-bottom: 3px solid var(--color-ambre);
+  border-radius: 50%;
+}
+
+.errata-error-sticker {
+  align-self: flex-start;
+  margin-top: 0.25rem;
+  font-size: 0.58rem;
+  box-shadow: 2px 2px 0 var(--color-texte);
+}
+
+.errata-diagnosis-card {
+  background: var(--color-jaune-doux);
+}
+
+.errata-diagnosis-card strong {
+  display: block;
+  margin-top: 0.55rem;
+  color: var(--color-jaune);
+  font-family: var(--font-etroite);
+  font-size: clamp(2.2rem, 4vw, 3.5rem);
+  line-height: 0.85;
+  text-shadow: 2px 2px 0 var(--color-texte);
+}
+
+.errata-diagnosis-card h2 {
+  margin-top: 0.35rem;
+  font-size: 1.05rem;
+}
+
+.errata-diagnosis-card p,
+.errata-drill-card p {
+  margin: 0.45rem 0 0;
+  color: var(--color-muet);
+  font-size: 0.72rem;
+  line-height: 1.35;
+}
+
+.errata-diagnosis-card .sticker,
+.errata-drill-card .sticker {
+  margin-top: 0.8rem;
+  font-size: 0.58rem;
+  box-shadow: 2px 2px 0 var(--color-texte);
+}
+
+.errata-drill-card {
+  background: var(--color-bleu);
+  color: white;
+}
+
+.errata-drill-card p {
+  color: rgb(255 255 255 / 0.86);
+}
+
+.errata-drill-question {
+  display: block;
+  margin-top: 0.75rem;
+  font-family: var(--font-lecture);
+  font-size: clamp(1.05rem, 2vw, 1.35rem);
+  line-height: 1.15;
+}
+
+.errata-drill-question b {
+  padding: 0 0.2rem;
+  border: 2px solid var(--color-texte);
+  border-radius: 0.25rem;
+  background: var(--color-ambre);
+  color: var(--color-texte);
+  font-weight: 700;
+}
+
+.errata-steps {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.4rem;
+  margin-top: 1rem;
+  padding-top: 0.8rem;
+  border-top: 2px dashed var(--color-bord);
+}
+
+.errata-pipeline-step {
+  display: grid;
+  grid-template-columns: 1.45rem 1fr;
+  column-gap: 0.35rem;
+  align-items: center;
+  min-width: 0;
+  color: var(--color-texte);
+  font-size: 0.62rem;
+  line-height: 1.05;
+}
+
+.errata-pipeline-step > span {
+  grid-row: span 2;
+  display: grid;
+  place-items: center;
+  width: 1.45rem;
+  height: 1.45rem;
+  border: 2px solid var(--color-texte);
+  border-radius: 0.4rem;
+  background: var(--color-menthe);
+  font-family: var(--font-etroite);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.errata-pipeline-step.is-hot > span {
+  background: var(--color-ambre);
+}
+
+.errata-pipeline-step strong {
+  overflow: hidden;
+  font-size: 0.63rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.errata-pipeline-step small {
+  overflow: hidden;
+  color: var(--color-faible);
+  font-size: 0.53rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.errata-home-lower {
+  display: grid;
+  gap: 0.8rem;
+  padding-top: 0.5rem;
+}
+
+.errata-home-lower > .rounded-xl {
+  background: var(--color-surface);
+}
+
+@media (max-width: 900px) {
+  .errata-hero {
+    grid-template-columns: 1fr;
+    min-height: auto;
+  }
+
+  .errata-hero-copy {
+    text-align: center;
+  }
+
+  .errata-eyebrow,
+  .errata-hero-actions,
+  .errata-proof-stickers {
+    justify-content: center;
+  }
+
+  .errata-hero-lede {
+    margin-right: auto;
+    margin-left: auto;
+  }
+}
+
+@media (max-width: 620px) {
+  .errata-hero {
+    padding-top: 1.2rem;
+  }
+
+  .errata-journey-flow {
+    grid-template-columns: 1fr;
+  }
+
+  .errata-journey-arrow {
+    transform: rotate(90deg);
+  }
+
+  .errata-steps {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .errata-journey-heading {
+    font-size: 0.62rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .errata-hero-actions .rounded-full,
+  .errata-journey-card {
+    transition: none;
+  }
+}
