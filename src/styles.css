@@ -204,6 +204,13 @@ body {
   z-index: 1;
 }
 
+.errata-hero-kicker {
+  margin: 0 0 0.75rem;
+  color: white;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
 .errata-eyebrow,
 .errata-step-label,
 .errata-card-bar,
@@ -520,6 +527,7 @@ body {
   }
 
   .errata-eyebrow,
+  .errata-hero-kicker,
   .errata-hero-actions,
   .errata-proof-stickers {
     justify-content: center;

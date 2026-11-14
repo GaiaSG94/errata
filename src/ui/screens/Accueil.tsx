@@ -57,20 +57,19 @@ export function Accueil() {
     <div className="errata-home">
       <section className="errata-hero">
         <div className="errata-hero-copy">
-          <span className="errata-eyebrow"><i /> No grades · only your errors</span>
-          <h1>Bring the paper.<br />Get the <span className="mot-italique">drill</span>.</h1>
+          <p className="errata-hero-kicker">A study app for students who hate red pen.</p>
+          <h1>Turn your mistakes into <span className="mot-italique">moves</span></h1>
           <p className="errata-hero-lede">
-            Photograph your corrected math paper. Errata reads the teacher&apos;s marks, finds the error you repeat,
-            and builds the exercise that works on that gesture.
+            Photograph your corrected paper. We read the teacher&apos;s marks, sort them by error type,
+            and build the exercise that works on <em>your</em> weakness.
           </p>
           <div className="errata-hero-actions">
-            <Bouton onClick={() => aller('cadrage')}>Scan a paper <span>→</span></Bouton>
+            <Bouton onClick={() => aller('cadrage')}>Photograph my paper</Bouton>
             <Bouton variante="secondaire" onClick={() => void analyserDemo()} disabled={occupe}>Try the demo <span>↗</span></Bouton>
           </div>
           <div className="errata-proof-stickers" aria-hidden="true">
-            <span className="sticker sticker-ambre">E01 ×3</span>
-            <span className="sticker sticker-menthe">E05 cleared ✓</span>
-            <span className="sticker sticker-rose">0 papers stored</span>
+            <span className="sticker sticker-rose">No grades. Ever.</span>
+            <span className="sticker sticker-blanc">12 error types</span>
           </div>
         </div>
 
