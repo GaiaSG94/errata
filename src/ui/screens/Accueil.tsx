@@ -2,7 +2,7 @@ import { Bouton } from '../components/Bouton'
 import { BandeauSante } from '../components/BandeauSante'
 import { Carte } from '../components/Carte'
 import { BoardDuo } from '../components/BoardDuo'
-import { COPIES_DEMO, ID_COPIES_DEMO } from '../../pipeline/demo'
+import { COPIES_DEMO, TOUR_DEMO } from '../../pipeline/demo'
 import { useRature } from '../../etat/useRature'
 
 const TITRE = ['Turn', 'your', 'mistakes', 'into', 'moves'] as const
@@ -17,8 +17,8 @@ const TITRE = ['Turn', 'your', 'mistakes', 'into', 'moves'] as const
  */
 export function Accueil() {
   const { aller, profil, analyserDemo, occupe } = useRature()
-  const plusieurs = ID_COPIES_DEMO.length > 1
-  const copieGuidee = ID_COPIES_DEMO.slice(0, 3)
+  const plusieurs = TOUR_DEMO.length > 1
+  const copieGuidee = TOUR_DEMO.slice(0, 4)
 
   return (
     <div className="errata-home">

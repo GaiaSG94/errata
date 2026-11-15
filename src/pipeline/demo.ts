@@ -127,6 +127,16 @@ export const COPIES_DEMO: CopieDemo[] = COPIES_ECHANTILLON.filter(estEnregistre)
 
 export const ID_COPIES_DEMO = COPIES_DEMO.map((copie) => copie.id)
 
+/**
+ * Le tour guidé de l'accueil : la trajectoire de Jordan (mauvaise récurrente
+ * E01 sur trois copies, puis une copie propre). C'est la même histoire que
+ * celle montrée sur l'écran « Sample papers » — le juge voit les deux.
+ * Si un enregistrement manque, la copie est simplement sautée.
+ */
+export const TOUR_DEMO = ['v2-copie-1', 'v2-copie-2', 'v2-copie-3', 'v2-copie-4'].filter((id) =>
+  ID_COPIES_DEMO.includes(id),
+)
+
 export function copieDemo(id?: string): CopieDemo | undefined {
   if (!id) return COPIES_DEMO[0]
   return COPIES_DEMO.find((copie) => copie.id === id)
