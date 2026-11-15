@@ -105,6 +105,22 @@ async function appelerProxy(requete: RequeteLLM, modele: string): Promise<{ text
 const TRANSITOIRES = new Set([402, 429, 500, 502, 503, 504])
 const ESSAIS_PROXY = 6
 const PAUSE_PROXY_MS = 12_000
+/**
+ * Modèles essayés à tour de rôle quand le proxy est utilisé : un modèle peut
+ * répondre hors JSON (réponse refusée par le parseur zod). Tourner la liste
+ * évite de bloquer sur un modèle bavard.
+ */
+const MODELES_TENTATION = [
+  'ag/gemini-4-carbon',
+  'ag/claude-sonnet-4-6',
+  'ag/gemini-4-argon',
+  'ag/claude-sonnet-5-5',
+]
+
+/** Une réponse JSON est attendue : sans accolade, le parseur la refusera. */
+function estJson(texte: string): boolean {
+  return texte.includes('{') && texte.includes('}')
+}
 
 /** Client réel avec repli sur la chaîne, qui enregistre chaque réponse brute. */
 function clientEnregistreur(brut: Record<string, string>, cle: string): ClientBrut {
@@ -115,15 +131,17 @@ function clientEnregistreur(brut: Record<string, string>, cle: string): ClientBr
     return async (requete: RequeteLLM) => {
       let derniere = 'proxy indisponible'
       for (let essai = 0; essai < ESSAIS_PROXY; essai += 1) {
+        const modele = MODELES_TENTATION[essai % MODELES_TENTATION.length]!
         try {
-          const { texte, modele } = await appelerProxy(requete, MODELE_PAR_DEFAUT)
+          const { texte, modele: repondant } = await appelerProxy(requete, modele)
+          if (!estJson(texte)) throw new Error(`réponse hors JSON (${repondant})`)
           brut[cle] = texte
-          modelesRepondus.add(modele)
+          modelesRepondus.add(repondant)
           return texte
         } catch (erreur) {
           derniere = (erreur as Error).message
           const statut = (erreur as { statut?: number }).statut ?? 0
-          if (!TRANSITOIRES.has(statut)) throw erreur
+          if (!TRANSITOIRES.has(statut) && !(erreur as Error).message.includes('hors JSON')) throw erreur
           await new Promise((r) => setTimeout(r, PAUSE_PROXY_MS))
         }
       }
