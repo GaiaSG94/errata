@@ -35,7 +35,7 @@ export function Application() {
   const { ecran, santeProxy } = useRature()
   const EcranActif = ECRANS[ecran]
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-6xl flex-col px-4 py-6 sm:px-8">
+    <div className="relative z-10 mx-auto flex min-h-dvh w-full max-w-[1500px] flex-col px-4 py-5 sm:px-7 lg:px-10">
       <Entete />
       <main className="errata-zone flex-1">
         <EcranActif />

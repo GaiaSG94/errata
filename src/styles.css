@@ -155,33 +155,36 @@ body {
 .errata-home {
   --errata-ink: var(--color-texte);
   padding: 0 0 1.5rem;
-  background: var(--color-bleu);
   color: white;
   position: relative;
-  overflow: hidden;
 }
 
-.errata-home::before,
-.errata-home::after {
+/* Trame de points : sur TOUTE la page (fixe, bord à bord). Aucun bleu pur,
+   même dans les marges. Deux couches : demi-teinte fine + gros points. */
+body::before,
+body::after {
   content: '';
-  position: absolute;
-  inset: 0;
+  position: fixed;
   pointer-events: none;
+  z-index: 0;
 }
 
-.errata-home::before {
-  background-image: radial-gradient(rgb(255 255 255 / 0.32) 3px, transparent 3.4px);
+body::before {
+  inset: 0;
+  background-image: radial-gradient(rgb(255 255 255 / 0.42) 3.2px, transparent 3.4px);
   background-size: 30px 30px;
-  opacity: 0.7;
-  mask-image: radial-gradient(70% 60% at 20% 20%, transparent, black 58%);
+  -webkit-mask-image: radial-gradient(62% 56% at 26% 44%, transparent, black 78%);
+  mask-image: radial-gradient(62% 56% at 26% 44%, transparent, black 78%);
 }
 
-.errata-home::after {
-  background-image: radial-gradient(rgb(242 165 22 / 0.65) 5px, transparent 5.5px);
-  background-position: 75px 42px;
-  background-size: 190px 190px;
-  opacity: 0.4;
-  mask-image: radial-gradient(58% 50% at 78% 30%, black, transparent 75%);
+body::after {
+  inset: -80px;
+  background-image: radial-gradient(rgb(255 255 255 / 0.5) 7px, transparent 7.6px),
+    radial-gradient(rgb(242 165 22 / 0.6) 5.4px, transparent 6px);
+  background-size: 150px 150px, 190px 190px;
+  background-position: 24px 38px, 96px 118px;
+  -webkit-mask-image: radial-gradient(64% 58% at 30% 46%, transparent, black 80%);
+  mask-image: radial-gradient(64% 58% at 30% 46%, transparent, black 80%);
 }
 
 .errata-home > * {
