@@ -92,6 +92,7 @@ function GalerieEchantillons() {
 export function Accueil() {
   const { aller, profil, analyserDemo, occupe } = useRature()
   const plusieurs = ID_COPIES_DEMO.length > 1
+  const copieGuidee = ID_COPIES_DEMO.slice(0, 3)
 
   return (
     <div className="errata-home">
@@ -105,8 +106,17 @@ export function Accueil() {
           </p>
           <div className="errata-hero-actions">
             <Bouton onClick={() => aller('cadrage')}>Photograph my paper</Bouton>
+            {plusieurs ? (
+              <Bouton
+                variante="secondaire"
+                onClick={() => void analyserDemo(copieGuidee)}
+                disabled={occupe}
+              >
+                Watch the demo · {copieGuidee.length} papers → my profile
+              </Bouton>
+            ) : null}
             <Bouton
-              variante="secondaire"
+              variante="discret"
               onClick={() => document.getElementById('tester')?.scrollIntoView({ behavior: 'smooth' })}
             >
               Try a sample paper <span>↓</span>
@@ -143,11 +153,11 @@ export function Accueil() {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <p className="text-sm text-white/90">No paper is ever stored. Your history stays on your device.</p>
           <div className="flex flex-wrap gap-2">
-            <Bouton variante="discret" onClick={() => void analyserDemo()} disabled={occupe}>Run the demo</Bouton>
-            {plusieurs ? <Bouton variante="discret" onClick={() => void analyserDemo(ID_COPIES_DEMO)} disabled={occupe}>Full demo ({ID_COPIES_DEMO.length} papers)</Bouton> : null}
+            <Bouton variante="discret" onClick={() => void analyserDemo()} disabled={occupe}>Run the demo (one paper, real timings)</Bouton>
+            {plusieurs ? <Bouton variante="discret" onClick={() => void analyserDemo(ID_COPIES_DEMO)} disabled={occupe}>Full demo ({ID_COPIES_DEMO.length} papers, sped up)</Bouton> : null}
           </div>
         </div>
-        <p className="text-center text-xs text-white/75">Model answers recorded on {COPIES_DEMO.length} sample paper(s) · no network call · no key.</p>
+        <p className="text-center text-xs text-white/75">Model answers recorded on {COPIES_DEMO.length} sample paper(s) · offline replay keeps real answer order and timings (the full guided tour is sped up) · no key.</p>
         {profil.totalAnalyses > 0 ? (
           <Carte titre="Continue" ton="vert">
             <p className="text-sm text-muet">{profil.totalAnalyses} paper(s) analysed on this device.</p>

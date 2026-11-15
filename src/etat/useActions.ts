@@ -17,6 +17,8 @@ import type { Ecran } from './useEtatRature'
 import { amontMort, fusionner, messageErreur, transportDe } from './useEtatRature'
 import type { Reglages } from '../domain/types'
 
+const ATTENTE_DEMO_GUIDEE_MS = 850
+
 export type { Reglages }
 
 type Ctx = { etat: Etat; setEtat: Dispatch<SetStateAction<Etat>>; aller: (ecran: Ecran) => void }
@@ -33,13 +35,13 @@ function transportPour({ etat, setEtat }: Ctx) {
 /** Une analyse, avec publication de la progression. Rend null si échec. */
 async function executerAnalyse(
   fichier: File,
-  options: { transport: Transport; demoId?: string; setEtat: Ctx['setEtat'] },
+  options: { transport: Transport; demoId?: string; attenteMax?: number; setEtat: Ctx['setEtat'] },
 ): Promise<ResultatAnalyse | null> {
   const { demoId, setEtat } = options
   try {
     return await analyserCopie(fichier, {
       transport: options.transport,
-      ...(demoId ? { client: clientDemoPour(demoId) } : {}),
+      ...(demoId ? { client: clientDemoPour(demoId, { attenteMax: options.attenteMax }) } : {}),
       onProgression: (p) => setEtat((precedent) => ({ ...precedent, progression: fusionner(precedent.progression, p) })),
     })
   } catch (erreur) {
@@ -82,7 +84,7 @@ function publierPartiel(
 
 export function useActionsRature({ etat, setEtat, aller }: Ctx) {
   const analyser = useCallback(
-    async (fichier: File, options: { demoId?: string } = {}) => {
+    async (fichier: File, options: { demoId?: string; attenteMax?: number } = {}) => {
       aller('analyse')
       setEtat((precedent) => ({
         ...precedent,
@@ -94,7 +96,7 @@ export function useActionsRature({ etat, setEtat, aller }: Ctx) {
       const demoId = options.demoId ?? null
       const resultat = await analyserCopie(fichier, {
         transport: transportPour({ etat, setEtat, aller }),
-        ...(demoId ? { client: clientDemoPour(demoId) } : {}),
+        ...(demoId ? { client: clientDemoPour(demoId, { attenteMax: options.attenteMax }) } : {}),
         onProgression: (p) =>
           setEtat((precedent) => ({ ...precedent, progression: fusionner(precedent.progression, p) })),
         onResultatPartiel: (partiel) => publierPartiel(setEtat, partiel, demoId),
@@ -113,15 +115,19 @@ export function useActionsRature({ etat, setEtat, aller }: Ctx) {
     [aller, etat.reglages, setEtat],
   )
 
-  /** Démo : une copie seule, ou plusieurs d'affilée (trajectoire du profil). */
+  /** Démo : une copie seule (rythme réel), ou plusieurs d'affilée (tour guidé : trajectoire du profil, rythme accéléré). */
   const analyserDemo = useCallback(
     async (ids?: string[]) => {
       const cibles = ids && ids.length > 0 ? ids : ID_COPIES_DEMO.slice(0, 1)
+      const guide = cibles.length > 1
       for (const id of cibles) {
-        await analyser(await fichierDemoPour(id), { demoId: id })
+        await analyser(await fichierDemoPour(id), {
+          demoId: id,
+          ...(guide ? { attenteMax: ATTENTE_DEMO_GUIDEE_MS } : {}),
+        })
       }
       // Plusieurs copies : c'est la trajectoire qui intéresse, pas la dernière copie.
-      if (cibles.length > 1) aller('profil')
+      if (guide) aller('profil')
     },
     [analyser, aller],
   )

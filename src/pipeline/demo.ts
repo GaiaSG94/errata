@@ -147,17 +147,25 @@ function attendre(ms: number): Promise<void> {
 }
 
 /**
- * Client de rejeu pour une copie donnée. La réponse est instantaneous, mais on
- * **attend la durée réellement mesurée** lors de l'enregistrement : sans cela,
- * la démo serait instantanée et donc peu crédible (« 0,1 s » pour une analyse
- * complète est un signal d'alerte pour un juge technique).
+ * Client de rejeu pour une copie donnée. Deux rythmes :
+ * - `attenteMax` absent : on **attend la durée réellement mesurée** lors de
+ *   l'enregistrement — sans cela, la démo serait instantanée et donc peu
+ *   crédible (« 0,1 s » pour une analyse complète est un signal d'alerte
+ *   pour un juge technique) ;
+ * - `attenteMax` fourni (tour guidé multi-copies) : la même réponse, le même
+ *   ordre, mais un plafond par étape pour que quatre copies tiennent en
+ *   quelques dizaines de secondes. L'UI dit honnêtement « accéléré ».
  */
-export function clientDemoPour(id?: string, options: { attente?: boolean } = {}): ClientBrut {
+export function clientDemoPour(
+  id?: string,
+  options: { attente?: boolean; attenteMax?: number } = {},
+): ClientBrut {
   const copie = copieDemo(id)
   if (!copie) throw new Error('Demo mode: no recorded answer in corpus/reponses/.')
   const reponses = copie.enregistrement.reponses
   const durees = copie.enregistrement.durees ?? {}
   const attendu = options.attente ?? true
+  const attenteMax = options.attenteMax ?? Number.POSITIVE_INFINITY
   return async (requete: RequeteLLM) => {
     const etape = etapeDe(requete)
     const texte = reponses[etape]
@@ -175,7 +183,9 @@ export function clientDemoPour(id?: string, options: { attente?: boolean } = {})
       verdict: 'genere',
     }[etape]
     const duree = durees[etapePipeline]
-    if (attendu && typeof duree === 'number' && duree > 0 && duree < 60_000) await attendre(duree)
+    if (attendu && typeof duree === 'number' && duree > 0 && duree < 60_000) {
+      await attendre(Math.min(duree, attenteMax))
+    }
     return texte
   }
 }
