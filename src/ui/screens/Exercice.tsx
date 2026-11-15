@@ -18,7 +18,7 @@ export function Exercice() {
   const verifie = resultat?.exercice
   if (!verifie) {
     return (
-      <div className="space-y-4">
+      <div className="mx-auto w-full max-w-4xl space-y-4">
         <h1 className="text-2xl font-bold tracking-tight">Targeted exercise</h1>
         <p className="text-sm text-muet">
           {resultat?.messageExercice ?? 'No exercise yet: analyse a paper first.'}
@@ -30,7 +30,7 @@ export function Exercice() {
 
   const { exercice, verdict } = verifie
   return (
-    <div className="space-y-5">
+    <div className="mx-auto w-full max-w-4xl space-y-5">
       <h1 className="text-2xl font-bold tracking-tight">Work on: {libelleDe(exercice.typeTravaille)}</h1>
       <p className="text-sm text-muet">
         One goal, not a whole chapter. Level: {exercice.niveau}.

@@ -20,7 +20,7 @@ export function Reglages() {
   }
 
   return (
-    <div className="space-y-5">
+    <div className="mx-auto w-full max-w-4xl space-y-5">
       <h1 className="text-2xl font-bold tracking-tight">Settings</h1>
 
       <Carte titre="Model access" ton="jaune">
