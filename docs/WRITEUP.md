@@ -1,138 +1,144 @@
 # Errata — write-up
 
-## 1. Le problème
+## 1. The problem
 
-Un élève rend une copie. Le professeur la corrige, l'annote, la rend. L'élève la regarde dix
-secondes, constate la note, et la range dans son sac. C'est fini.
+A student hands in a test. The teacher marks it, annotates it, hands it back. The student looks at
+it for ten seconds, sees the grade, and puts it in their bag. That's it.
 
-Pourtant cette copie contient la seule information vraiment personnelle de toute sa scolarité : la
-liste exacte de ses erreurs. Pas « il faut réviser les fractions », mais « tu as perdu un signe au
-développement, comme la semaine dernière, et comme au contrôle d'avant ».
+Yet that paper holds the only truly personal information of their whole schooling: the exact list
+of their mistakes. Not "you need to revise fractions", but "you lost a sign while expanding, like
+last week, and like in the test before that".
 
-Cette information est jetée en 24 heures. Et elle est d'autant plus précieuse que les erreurs ne
-sont pas aléatoires : un élève refait les mêmes toute l'année, sans jamais pouvoir les nommer.
+That information is thrown away within a day. And it is all the more valuable because mistakes are
+not random: a student repeats the same ones all year long, without ever being able to name them.
 
-Le professeur, lui, voit bien la récurrence. Mais produire un exercice sur mesure pour 30 élèves,
-chaque semaine, n'est matériellement pas possible. Le feedback reste collectif.
+The teacher does see the pattern. But writing a tailored exercise for 30 students, every week, is
+simply not possible. Feedback stays collective.
 
-## 2. La thèse
+## 2. The idea
 
-Tout le monde utilise l'IA pour **obtenir la réponse**. Photomath résout l'exercice photographié,
-ChatGPT explique. Ces outils suppriment l'effort — ils ne ciblent aucune lacune, parce qu'ils ne
-connaissent pas l'histoire de l'élève.
+Everyone uses AI to **get the answer**. Photomath solves the photographed exercise, ChatGPT explains
+it. These tools remove the effort — they target no weakness, because they don't know the student's
+history.
 
-Errata inverse le geste : **on ne photographie pas l'énoncé, on photographie la correction.**
+Errata flips the gesture: **you don't photograph the exercise, you photograph the correction.**
 
-La copie annotée est le seul artefact qui contient déjà le diagnostic. Il suffisait de le lire.
+The marked paper is the only artefact that already contains the diagnosis. We just had to read it.
 
-- 1ʳᵉ copie → un diagnostic
-- 3ᵉ copie → un pattern (« 62 % de tes erreurs sont des signes perdus au développement »)
-- 5ᵉ copie → un plan
+- 1st paper → a diagnosis
+- 3rd paper → a pattern ("88 % of your mistakes are a lost sign")
+- 5th paper → a plan
 
-On ne révise plus un chapitre. On révise sa faille.
+You no longer revise a chapter. You revise your habit.
 
-## 3. Ce qu'on a construit
+## 3. What we built
 
-Une webapp statique, sans compte, sans base de données, qui tient en six étapes :
+A static web app, no account, no database, built around six steps:
 
-1. **Ingest** — la photo est normalisée (1600 px, contraste étiré) : une copie photographiée au
-   téléphone dans un couloir est terne, et le crayon du professeur disparaît.
-2. **Anonymise** — le bandeau d'en-tête est pixelisé avant tout affichage. Le nom ne sort jamais de
-   l'appareil.
-3. **Extrait** — un appel multimodal lit les annotations du professeur : croix, « signe ! »,
-   « justifie », corrections manuscrites. Aucun OCR classique : sur du manuscrit, c'est inutilisable.
-4. **Classifie** — chaque faute reçoit **un** code d'une taxonomie fermée de 12 types, avec une
-   confiance. Le modèle n'a pas le droit d'inventer une catégorie.
-5. **Agrège** — le profil d'erreur se construit en local, dans IndexedDB.
-6. **Génère** — un exercice ciblé sur le type dominant, puis un **second passage** qui vérifie
-   qu'il travaille bien ce type, qu'il ne donne pas la solution d'origine, et qu'il est au bon
-   niveau. Deux tentatives maximum, puis un message honnête.
+1. **Ingest** — the photo is normalised (resized, contrast stretched): a paper photographed with a
+   phone in a corridor is dull, and the teacher's pencil disappears.
+2. **Anonymise** — the header banner is pixelated before anything is displayed. The name never
+   leaves the device unmasked.
+3. **Read** — one multimodal call reads the teacher's marks: crosses, "sign!", "justify",
+   handwritten corrections. No classic OCR: on handwriting it is unusable.
+4. **Classify** — each mistake gets **one** code from a closed taxonomy of 12 types, with a
+   confidence score. The model is not allowed to invent a category, and every answer is validated
+   against a strict schema.
+5. **Aggregate** — the error profile is built locally, in IndexedDB.
+6. **Generate** — a drill targeted at the dominant type, then a **second pass** that checks it really
+   works on that type, does not give away the original solution, and is at the right level. Two
+   attempts at most, then an honest message.
 
-Côté professeur : le paquet de copies photographié en lot donne la statistique d'erreurs de la
-classe et un export CSV. Ce sont exactement les mêmes tuyaux, une autre vue.
+For teachers: a batch of papers gives the class's error statistics, "what to re-teach on Monday",
+and a CSV export. Exactly the same pipes, a different view.
 
-## 4. Les décisions difficiles
+Infrastructure: GitHub Pages for the app, a Cloudflare Worker as edge proxy (server-side key, quota,
+fallback across a chain of seven vision models, 60-second circuit breaker), and an offline demo that
+replays answers recorded on the real model, with their real timings.
 
-**Une taxonomie fermée plutôt qu'un prompt libre.** C'est la décision structurante du projet. Un
-libellé inventé par le modèle (« erreur d'algèbre », « problème de signe ») n'est ni mesurable, ni
-comparable d'une copie à l'autre, ni défendable devant un jury technique. Douze codes, une
-signature par code, et un `E99` « non typée » pour ce qui ne rentre pas. Conséquence : le profil
-devient une statistique, pas une liste de phrases.
+## 4. Hard decisions
 
-**Un seuil de confiance à 0,6, et `E99` exclue du profil.** Mieux vaut une faute non typée qu'une
-faute mal typée : une erreur de classification se propage dans toutes les copies suivantes et
-fausse le profil durablement.
+**A closed taxonomy instead of a free prompt.** This is the project's structural decision. A label
+invented by the model ("algebra error", "sign problem") is neither measurable, nor comparable from
+one paper to the next, nor defensible in front of a technical jury. Twelve codes, one signature per
+code, and an `E99` "untyped" for what doesn't fit. Consequence: the profile becomes a statistic, not
+a list of sentences.
 
-**`E11` (recopie) signalée mais pondérée à zéro.** Une inattention n'est pas une lacune. La
-compter ferait dire à l'app « ta faille, c'est que tu recopies mal », ce qui est vrai, inutile, et
-décourageant. Elle est affichée, elle ne pèse pas.
+**A 0.6 confidence threshold, with `E99` excluded from the profile.** Better an untyped mistake than
+a mistyped one: a classification error propagates into every following paper and skews the profile
+for good.
 
-**Zéro backend de données.** Pas de base, pas d'authentification, pas de RGPD serveur. L'historique
-vit dans le navigateur, exportable et supprimable en un clic. Un proxy edge minimal cache la clé
-et borne le quota — c'est la seule brique serveur du projet.
+**`E11` (copying mistake) flagged but weighted zero.** A slip is not a gap. Counting it would make
+the app say "your weakness is that you copy badly", which is true, useless, and discouraging. It is
+shown, it doesn't weigh.
 
-**Le nom est masqué avant affichage, pas après.** Une copie de lycée porte un nom, parfois une
-classe. Pixeliser le bandeau d'en-tête coûte quelques millisecondes et évite qu'une photo de copie
-ne devienne une donnée personnelle qui circule.
+**Zero data backend.** No database, no authentication, no personal data on a server. History lives
+in the browser, exportable and deletable in one click. A minimal edge proxy hides the key and caps
+the quota — it is the project's only server component.
 
-**Aucun rouge dans l'interface.** La copie arrive déjà couverte d'annotations rouges. Ajouter du
-rouge dans l'UI, c'est rajouter de la honte à un document déjà marqué. Le diagnostic est jaune, la
-progression est verte. Ce n'est pas un choix esthétique : c'est ce qui rend l'app utilisable par un
-élève qui vient de rater un contrôle.
+**The name is masked before display, not after.** A school paper carries a name, sometimes a class.
+Pixelating the header banner costs a few milliseconds and keeps a photo of a paper from becoming
+personal data in circulation.
 
-## 5. Les échecs
+**No red in the interface.** The paper already arrives covered in red marks. Adding red to the UI
+adds shame to a document that is already marked. The diagnosis is amber, progress is green. It isn't
+an aesthetic choice: it is what makes the app usable by a student who just failed a test.
 
-**L'OCR classique sur le manuscrit.** Premier réflexe, premier échec : la reconnaissance des
-annotations manuscrites du professeur est inexploitable. Toute la lecture passe désormais par le
-modèle multimodal, en un seul appel.
+## 5. What failed
 
-**Les faux positifs sur copie propre.** La première version du prompt d'extraction « trouvait » des
-fautes là où le professeur n'avait rien écrit — c'est le pire défaut possible pour ce produit : un
-Errata qui invente des erreurs détruit la confiance instantanément. Correction en deux temps :
-`copiePropre` est devenu une réponse explicitement attendue du modèle, et l'étape de classification
-**n'est plus appelée du tout** dans ce cas. Le test correspondant vérifie qu'aucun appel réseau
-n'est émis.
+**Classic OCR on handwriting.** First reflex, first failure: recognising the teacher's handwritten
+marks is unusable. All reading now goes through the multimodal model, in a single call.
 
-**La confiance surévaluée.** Un modèle qui répond 0,95 partout rend le seuil inutile. Le prompt
-impose maintenant une consigne de calibration explicite, et le corpus de validation contient une
-annotation à 0,31 qui doit finir `E99`.
+**False positives on clean papers.** The first extraction prompt "found" mistakes where the teacher
+had written nothing — the worst possible flaw for this product: an Errata that invents mistakes
+destroys trust instantly. Fixed in two steps: `copiePropre` (clean paper) became an explicitly
+expected answer, and the classification step is **no longer called at all** in that case. The
+matching test checks that no network call is made.
 
-**Les exercices hors sujet.** Sans second passage, la génération dérive vers la notion générale —
-des exercices de fractions alors que la faute portait sur le dénominateur commun. D'où le
-garde-fou, et la règle « deux tentatives puis on l'annonce » : un exercice à côté du sujet est pire
-que pas d'exercice.
+**Over-confident scores.** A model that answers 0.95 everywhere makes the threshold useless. The
+prompt now carries an explicit calibration instruction, and the validation corpus contains a 0.31
+annotation that must end up as `E99`.
 
-**Le quota partagé.** Un seul jeu de clés pour toute la démonstration, c'est un point de rupture le
-jour du jugement. Le BYOK n'était pas prévu au départ ; il est devenu obligatoire.
+**Off-topic exercises.** Without a second pass, generation drifts to the general topic — fraction
+exercises when the mistake was about the common denominator. Hence the guard, and the "two attempts,
+then we say so" rule: an off-topic exercise is worse than no exercise.
 
-## 6. Ce qu'on a appris
+**The shared quota.** A single set of keys for the whole demo is a breaking point on judging day.
+BYOK wasn't planned at first; it became mandatory.
 
-Un diagnostic n'a de valeur que s'il est **stable** : la même copie analysée deux fois doit donner
-le même type d'erreur. La taxonomie fermée et le seuil de confiance ne sont pas des contraintes
-techniques, ce sont les conditions pour que l'élève puisse faire confiance à son profil.
+**A saturated upstream.** On the last day, every vision model of the chain answered
+`503 no available provider` for hours, and the analysis screen waited in silence. We added a global
+time budget, progress messages naming the model being tried, and an honest error with **Try again**.
+That is also why the sample papers replay answers recorded on the real model: the demo keeps working
+when the provider doesn't.
 
-Le produit ne vend pas de l'IA, il vend de la **récurrence**. Un seul appel multimodal ne suffit
-pas : c'est l'accumulation locale qui transforme un gadget en outil.
+## 6. What we learned
 
-Enfin : l'honnêteté est une fonctionnalité. Dire « exercice non disponible pour ce type », afficher
-la confiance, annoncer qu'aucune erreur n'a été trouvée sur une copie propre — ces trois
-comportements rapportent plus de crédibilité que n'importe quelle animation.
+A diagnosis is only worth something if it is **stable**: the same paper analysed twice must give
+the same type of mistake. The closed taxonomy and the confidence threshold are not technical
+constraints, they are the conditions for a student to trust their profile.
 
-## 7. La suite
+The product doesn't sell AI, it sells **recurrence**. One multimodal call is not enough: local
+accumulation is what turns a gadget into a tool.
 
-- **Autres matières** : l'architecture le permet déjà, il manque les taxonomies (physique, puis
-  langues).
-- **Validation pédagogique** : mesurer sur une classe réelle si travailler son type dominant
-  améliore le résultat au contrôle suivant. Sans cette mesure, Errata reste une bonne intuition.
-- **Intégration LMS** : un professeur qui exporte sa statistique de classe veut la déposer dans
-  Pronote ou Moodle, pas dans un CSV.
-- **Suivi de progression** : montrer la décroissance d'un type d'erreur au fil des copies, c'est la
-  récompense qui fait revenir l'élève.
+Finally: honesty is a feature. Saying "no exercise available for this type", showing the confidence,
+announcing that no mistake was found on a clean paper — these three behaviours earn more credibility
+than any animation.
 
-## 8. Outils IA utilisés
+## 7. What's next
 
-Déclaration complète et détaillée : [`DECLARATION-IA.md`](DECLARATION-IA.md).
+- **Other subjects:** the architecture already allows it; the taxonomies are missing (physics, then
+  languages).
+- **Teaching validation:** measure on a real class whether working on your dominant type improves
+  the next test. Without that measurement, Errata remains a good intuition.
+- **LMS integration:** a teacher exporting class statistics wants to drop them into their school's
+  platform, not into a CSV.
+- **A second vision provider:** so that one marketplace's outage never blocks a live analysis.
 
-En résumé : le produit **appelle** une API multimodale [OI]-compatible servie par InferHub
-(extraction des annotations, classification, génération, garde-fou). Le développement a été assisté
-par des agents de codage, et chaque ligne est comprise, expliquable et démontrable par l'auteur.
+## 8. AI tools used
+
+Full, detailed declaration: [`DECLARATION-IA.md`](DECLARATION-IA.md).
+
+In short: the product **calls** an OpenAI-compatible multimodal API served by InferHub (reading the
+marks, classification, generation, relevance guard). Development was assisted by coding agents
+(Claude Code, opencode), and every line is understood, explainable and demonstrable by the author.

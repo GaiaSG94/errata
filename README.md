@@ -1,203 +1,209 @@
 # Errata 🖊️
 
-> Tu photographies ta copie corrigée. Elle trouve l'erreur que tu répètes — et te fabrique
-> l'exercice exactement dessus.
+> Photograph your corrected math paper. Errata finds the mistake you keep repeating — and builds
+> the exercise that works exactly on it.
 
-[![Démo publique](https://img.shields.io/badge/démo-publique-f5c518?style=flat-square)](https://gaiasg94.github.io/errata/)
+[![Live demo](https://img.shields.io/badge/demo-live-f2a516?style=flat-square)](https://gaiasg94.github.io/errata/)
 [![CI](https://img.shields.io/github/actions/workflow/status/GaiaSG94/errata/ci.yml?branch=main&label=ci&style=flat-square)](https://github.com/GaiaSG94/errata/actions/workflows/ci.yml)
-[![Tests](https://img.shields.io/badge/tests-201%20verts-3ecf8e?style=flat-square)](tests)
-[![Licence MIT](https://img.shields.io/badge/licence-MIT-9aa3b2?style=flat-square)](LICENSE)
+[![Tests](https://img.shields.io/badge/tests-206%20passing-43d18c?style=flat-square)](tests)
+[![MIT licence](https://img.shields.io/badge/licence-MIT-9aa3b2?style=flat-square)](LICENSE)
 
-Projet soumis à **IceHacks 2026** (CodeStarters, Devpost).
+Submitted to **IceHacks 2026** (CodeStarters, Devpost).
 
-## Essayer tout de suite
+## Try it now
 
-**<https://gaiasg94.github.io/errata/>** — public, HTTPS, sans compte, sans installation.
+**<https://gaiasg94.github.io/errata/>** — public, HTTPS, no account, nothing to install.
 
-| Tu veux… | Fais |
+| You want to… | Do this |
 |---|---|
-| Voir le produit en 10 secondes, sans rien envoyer | Accueil → **« Lancer la démonstration »** (copie d'exemple, réponses du modèle enregistrées) |
-| Analyser **ta** copie corrigée | Accueil → « Photographier ma copie » : l'analyse passe par le proxy, aucune clé à fournir |
-| Analyser sans dépendre du proxy partagé | Réglages → colle ta clé InferHub (BYOK) ; elle reste sur ton appareil |
-| Vérifier qu'aucune image n'est conservée | Ouvre l'onglet Réseau : l'image part en base64 dans la requête, rien n'est écrit, l'historique est en IndexedDB |
+| See the product in seconds, without sending anything | Home → **Try a sample paper** (papers written for this demo, real model answers recorded and replayed offline) |
+| Watch the whole story | Home → **Watch the demo** (one student, four papers, profile and trajectory) |
+| Analyse **your own** corrected paper | Home → **Photograph my paper**: the analysis goes through our proxy, no key needed |
+| Analyse without depending on the shared proxy | Settings (⚙) → paste your own InferHub key (BYOK); it stays on your device |
+| Check that no image is kept | Open the Network tab: the image travels as base64 in the request, nothing is written, history lives in IndexedDB |
 
-Le proxy public de ce dépôt est un **Cloudflare Worker** (`worker/worker.js`, chaîne de repli côté
-serveur + quota) : <https://errata-proxy.rature.workers.dev/analyze> — l'URL est injectée au build
-via la variable de dépôt `RATURE_PROXY_URL`. La variante Modal (CPU, scale-to-zero) reste disponible
-dans `proxy/modal_app.py`.
+The public proxy is a **Cloudflare Worker** (`worker/worker.js`: server-side model fallback chain,
+quota, 60 s circuit breaker): <https://errata-proxy.rature.workers.dev/analyze> (the subdomain keeps
+the project's original working name). Its URL is injected at build time through the repository
+variable `RATURE_PROXY_URL`. A Modal variant (CPU, scale-to-zero) remains in `proxy/modal_app.py`.
+
+> **Honest status, Nov 15:** the upstream vision models (InferHub marketplace) are intermittently
+> returning `503 no available provider`. When that happens, live analysis shows a clear error with
+> **Try again**, and the sample papers still work offline with answers recorded on the real model.
 
 ---
 
-## Le problème
+## The problem
 
-Un élève rend une copie, le professeur la corrige, l'élève la regarde dix secondes et la range.
-L'information la plus personnelle de sa scolarité — la liste exacte de ses erreurs récurrentes —
-est jetée en 24 heures.
+A student hands in a test, the teacher marks it, the student looks at it for ten seconds and puts it
+away. The most personal information in their schooling — the exact list of the mistakes they keep
+making — is thrown away within a day.
 
-Les outils existants répondent à la question posée (Photomath, ChatGPT) ou supposent que l'élève
-sait déjà quoi réviser (Anki, Khan Academy). Aucun ne part du seul artefact qui contient déjà
-l'information : **la copie annotée**.
+Existing tools answer the question you ask (Photomath, ChatGPT) or assume you already know what to
+revise (Anki, Khan Academy). None of them starts from the one artefact that already holds the
+answer: **the marked paper**.
 
-## La thèse
+## The idea
 
-On ne photographie pas l'énoncé, on photographie **la correction**. Errata n'est pas un générateur
-d'exercices : c'est un **profil d'erreur personnel** qui s'affine à chaque copie.
+You don't photograph the exercise, you photograph **the correction**. Errata is not an exercise
+generator: it is a **personal error profile** that sharpens with every paper.
 
-- 1ʳᵉ copie → un diagnostic
-- 3ᵉ copie → un pattern
-- 5ᵉ copie → un plan
+- 1st paper → a diagnosis
+- 3rd paper → a pattern
+- 5th paper → a plan
 
-## Le pipeline, en 6 étapes
+## The pipeline, in 6 steps
 
 ```
- photo ──▶ 1 Ingest ──▶ 2 Anonymise ──▶ 3 Extrait ──▶ 4 Classifie ──▶ 5 Agrège ──▶ 6 Génère
-           normalise     masque le nom    lit les       type chaque     profil        exercice
-           + contraste                    annotations   faute (E01..    local         ciblé +
-                                          du prof       E12 ou E99)     (IndexedDB)   garde-fou
+ photo ──▶ 1 Ingest ──▶ 2 Anonymise ──▶ 3 Read ──▶ 4 Classify ──▶ 5 Aggregate ──▶ 6 Generate
+           normalise     mask the name    teacher's   type each       local profile   targeted drill
+           + contrast                     marks       mistake         (IndexedDB)     + relevance
+                                                      (E01..E12/E99)                  guard
 ```
 
-| Étape | Entrée | Sortie | Budget |
+| Step | Input | Output | Budget |
 |---|---|---|---|
-| 1 Ingest | fichier image | image normalisée (1600 px, contraste étiré) | < 300 ms |
-| 2 Anonymise | image | bandeau du nom pixelisé (RNF-P2) | < 500 ms |
-| 3+4 Extrait et type | image | annotations + `[{code, ligne, explication, confiance}]` en **un seul appel** | < 20 s |
-| 4 bis Seconde passe | fautes de confiance < 0,75 | codes confirmés, reclassés ou rétrogradés en E99 | < 5 s |
-| 5 Agrège | classifications + historique | profil d'erreur (récurrence par type) | < 50 ms |
-| 6 Génère | type dominant | exercice + solution masquée + **garde-fou** | < 6 s |
+| 1 Ingest | image file | normalised image (contrast stretched) | < 300 ms |
+| 2 Anonymise | image | pixelated name banner | < 500 ms |
+| 3+4 Read and type | image | marks + `[{code, line, explanation, confidence}]` in **one call** | < 20 s target |
+| 4b Second pass | mistakes with confidence < 0.75 | codes confirmed, reclassified or downgraded to E99 | < 5 s |
+| 5 Aggregate | classifications + history | error profile (recurrence per type) | < 50 ms |
+| 6 Generate | dominant type | exercise + hidden solution + **relevance guard** | < 6 s |
 
-**Budget total : < 20 s** (22 s mesurés en moyenne, 6,7 s sur une copie propre). L'écran d'analyse
-affiche chaque étape et sa durée : l'attente devient une démonstration.
+The analysis screen shows every step and its duration: the wait becomes a demonstration. Upstream
+latency is the hard part (16 to 130 s per vision round trip depending on which model of the chain
+answers), which is why steps 3 and 4 are **merged into a single vision call**.
 
-Depuis la livraison du MVP : les étapes 3 et 4 sont **fusionnées en un seul appel vision** (la
-latence amont, 16 à 50 s par aller-retour, était le point dur), une **seconde passe** revérifie les
-fautes peu sûres, une **sonde de santé** du proxy propose la démo ou le BYOK si l'amont tombe, la
-copie est **zoomable et cliquable**, chaque type d'erreur a son **explication pédagogique**, le
-profil montre la **trajectoire** de la faille, et le mode prof répond à « **quoi reprendre lundi** ».
+Also shipped: a **second pass** re-checks low-confidence mistakes, a **health probe** offers the
+offline demo or BYOK when the upstream is down, the paper is **zoomable and clickable**, each error
+type has a **teaching explanation**, the profile shows the **trajectory** of each weakness, and the
+teacher view answers "**what should I re-teach on Monday?**".
 
-## La taxonomie fermée — le cœur du produit
+## The closed taxonomy — the core of the product
 
-12 types d'erreurs de maths, et rien d'autre. Le modèle ne peut pas inventer une catégorie :
+12 types of math mistakes, and nothing else. The model cannot invent a category:
 
-`E01` signe perdu · `E02` développement incomplet · `E03` identité remarquable · `E04` dénominateur
-commun · `E05` cas particulier oublié · `E06` puissance · `E07` racine · `E08` transposition ·
-`E09` arrondi · `E10` unité · `E11` recopie · `E12` conclusion non justifiée.
+`E01` lost sign · `E02` incomplete expansion · `E03` misused special product · `E04` wrong common
+denominator · `E05` forgotten special case · `E06` mishandled power · `E07` wrongly simplified root ·
+`E08` faulty transposition · `E09` rounding / precision · `E10` missing unit or conversion ·
+`E11` copying mistake · `E12` unjustified conclusion.
 
-Trois règles tiennent le diagnostic :
+Three rules hold the diagnosis together:
 
-1. une faute = **un seul** type (sinon le profil devient illisible) ;
-2. confiance < **0,6** → `E99` « non typée », **exclue** du profil ;
-3. `E11` (recopie) est **signalée mais pondérée à 0** : une inattention n'est pas une lacune.
+1. one mistake = **one** type (otherwise the profile becomes unreadable);
+2. confidence < **0.6** → `E99` "untyped", **excluded** from the profile;
+3. `E11` (copying) is **flagged but weighted 0**: a slip is not a gap.
 
-Détail : [`src/domain/taxonomy.ts`](src/domain/taxonomy.ts), règles dans
-[`src/domain/profil.ts`](src/domain/profil.ts).
+Details: [`src/domain/taxonomy.ts`](src/domain/taxonomy.ts), rules in
+[`src/domain/profil.ts`](src/domain/profil.ts). Model answers are validated against a Zod schema
+before anything is shown.
 
-## Le garde-fou de l'étape 6
+## The relevance guard (step 6)
 
-Un exercice hors sujet est pire que pas d'exercice. Après génération, un second passage vérifie
-trois points : l'exercice travaille **réellement** le type identifié, il **ne donne pas** la
-solution de l'exercice d'origine, il est **au même niveau**. Un refus → régénération, deux
-tentatives maximum, puis un message honnête : « exercice non disponible pour ce type ».
+An off-topic exercise is worse than no exercise. After generation, a second pass checks three
+things: the exercise **really** works on the identified type, it does **not** give away the solution
+of the original exercise, and it is **at the same level**. A refusal triggers a regeneration, two
+attempts at most, then an honest message: "no exercise available for this type".
 
-## Ce qui est dans le périmètre — et ce qui ne l'est pas
+## In scope — and out of scope
 
-**Inclus** : upload photo, extraction des annotations, classification typée, diagnostic affiché sur
-la copie, masquage du nom, profil longitudinal, exercice ciblé, mode professeur (lot + statistique
-de classe + CSV), exports CSV/Markdown, BYOK.
+**Included:** photo upload, reading the teacher's marks, typed classification, diagnosis drawn on
+the paper, name masking, longitudinal profile, targeted exercise, teacher mode (batch + class
+statistics + CSV), CSV/Markdown exports, BYOK.
 
-**Exclu, assumé publiquement** : autres matières que les maths (l'architecture le permet, la
-taxonomie non), écriture cursive très dégradée, comptes et base de données serveur, correction ou
-notation automatique de la copie. Restreindre le périmètre est une décision de design, pas un aveu.
+**Excluded, on purpose:** subjects other than math (the architecture allows it, the taxonomy does
+not), heavily degraded cursive, accounts and server database, automatic grading of the paper.
+Narrowing the scope is a design decision, not an admission.
 
-## Décisions difficiles
+## Hard decisions
 
-| Décision | Pourquoi |
+| Decision | Why |
 |---|---|
-| Taxonomie **fermée** plutôt que prompt libre | Un diagnostic mesurable et défendable ; un libellé inventé par le modèle est invérifiable |
-| **Aucun OCR classique** | Tesseract échoue sur le manuscrit : toute la lecture passe par le modèle multimodal, en un seul appel |
-| **Zéro backend de données** | Pas de base, pas d'auth, pas de RGPD serveur : l'historique vit dans IndexedDB |
-| **Proxy edge minimal** | La clé InferHub ne descend jamais dans le bundle ; sans lui, n'importe qui consomme le quota |
-| **Le nom est masqué avant affichage** | Pixelisation du bandeau d'en-tête, jamais de flou (un flou se devine) |
-| **Aucun rouge dans l'UI** | La copie est déjà annotée en rouge : ne pas rajouter de la honte à un document déjà marqué. Diagnostic en jaune, progression en vert |
+| **Closed** taxonomy instead of a free prompt | A measurable, defensible diagnosis; a label invented by the model can't be checked |
+| **No classic OCR** | Tesseract fails on handwriting: all reading goes through the multimodal model, in one call |
+| **Zero data backend** | No database, no auth, no server-side personal data: history lives in IndexedDB |
+| **Minimal edge proxy** | The InferHub key never reaches the bundle; without it anyone could burn the quota |
+| **Name masked before display** | The header banner is pixelated, never blurred (a blur can be guessed) |
+| **No red in the UI** | The paper is already marked in red: we don't add shame to it. Diagnosis in amber, progress in green |
 
-## Les échecs
+## What failed
 
-- **OCR classique sur le manuscrit** : abandonné dès le premier essai — le taux de lecture des
-  annotations manuscrites du professeur est inutilisable. Toute la lecture passe par le modèle
-  multimodal.
-- **Faux positifs sur copie propre** : la première version du prompt d'extraction « trouvait » des
-  fautes là où le professeur n'avait rien écrit. Correction : `copiePropre` devient une réponse
-  explicite attendue, et l'étape de classification **n'est pas appelée** dans ce cas (test
-  `RNF-04` : zéro appel, zéro faute).
-- **Confiance surévaluée** : un modèle qui annote « 0,95 » partout rend le seuil inutile. Le
-  prompt impose maintenant une consigne de calibration, et le corpus contient une annotation à
-  0,31 qui doit finir `E99`.
-- **Exercices hors sujet** : sans second passage, la génération dérive vers la notion générale
-  (des fractions) au lieu du geste fautif (le dénominateur commun). D'où le garde-fou.
+- **Classic OCR on handwriting:** dropped after the first try — the read rate on the teacher's
+  handwritten marks is unusable. All reading goes through the multimodal model.
+- **False positives on clean papers:** the first extraction prompt "found" mistakes where the
+  teacher had written nothing. Fix: `copiePropre` (clean paper) is now an explicit expected answer,
+  and classification is **not called** in that case (test `RNF-04`: zero calls, zero mistakes).
+- **Over-confident model:** a model that writes "0.95" everywhere makes the threshold useless. The
+  prompt now carries a calibration instruction, and the corpus contains a 0.31 annotation that must
+  end up as `E99`.
+- **Off-topic exercises:** without a second pass, generation drifts to the general topic
+  (fractions) instead of the faulty gesture (the common denominator). Hence the guard.
+- **Silent hangs when the upstream is saturated:** on Nov 15 the whole vision chain answered 503 and
+  the analysis screen waited forever. Fix: a global time budget, progress messages naming the model
+  being tried, and an honest error with **Try again**.
 
-## Lancer le projet
+## Run it locally
 
 ```bash
 npm ci
 npm run dev        # http://localhost:5173
-npm test           # 171 tests, aucun réseau
+npm test           # 206 tests, no network (live tests are skipped without a key)
 npm run typecheck
-npm run build      # dist/ — 112 Ko gzip
+npm run build      # dist/ — ~127 KB gzip JS
 ```
 
-Node ≥ 20. Aucune dépendance payante.
+Node ≥ 20. No paid dependency.
 
-## Configuration du modèle
+## Model configuration
 
-Le produit parle une API [OI]-compatible servie par **InferHub**. Trois modes, dans l'ordre :
+The product speaks an OpenAI-compatible API served by **InferHub**. Three modes, in order:
 
-1. **Proxy edge** (recommandé) : la clé `INFERHUB_API_KEY` est côté serveur.
-   - Vercel : `vercel.json` + `api/analyze.ts` ;
-   - Cloudflare Worker : `worker/worker.js` (`wrangler deploy`, `wrangler secret put INFERHUB_API_KEY`).
-2. **BYOK** : l'utilisateur colle sa clé dans Réglages ; elle part dans l'en-tête `x-rature-cle` et
-   reste sur l'appareil. Filet de sécurité si le quota du proxy est épuisé pendant le jugement.
-3. **Mode démonstration** : l'accueil rejoue le parcours complet sur **trois copies du même élève**
-   (`corpus/copies-demo.json`), rendues comme de **vraies photos** (page penchée sur une table,
-   lumière inégale, grain de capteur, corrections du professeur en rouge) puis analysées par le
-   vrai modèle. Les réponses **et les durées mesurées** sont réenregistrées (`corpus/reponses/`) :
-   la démo reproduit le rythme réel d'une analyse (≈ 12 s), sans appel réseau ni clé, et l'UI le
-   dit. Trois copies, c'est ce qui rend visibles hors ligne le **profil**, sa **trajectoire** et le
-   mode professeur (« lot de démonstration »). Ajouter un enregistrement étend la démo sans toucher
-   au code (découverte au build).
+1. **Edge proxy** (recommended): the `INFERHUB_API_KEY` stays server-side.
+   - Cloudflare Worker: `worker/worker.js` (`wrangler deploy`, `wrangler secret put INFERHUB_API_KEY`);
+   - Vercel: `vercel.json` + `api/analyze.ts`.
+2. **BYOK**: the user pastes their key in Settings; it is sent in the `x-rature-cle` header and stays
+   on the device. Safety net if the proxy quota runs out during judging.
+3. **Offline demo**: the **Try a sample paper** screen and **Watch the demo** replay the full path
+   on papers written for this demo — four tests from the same student (Jordan), rendered as real
+   photos (page tilted on a desk, uneven light, teacher's red pen), plus two other students. They
+   were analysed by the real model; the answers **and measured timings** are recorded in
+   `corpus/reponses/` and replayed with no network call and no key — and the UI says so. Four papers
+   are what makes the **profile**, its **trajectory** and the teacher view visible offline. Adding a
+   recording extends the demo without touching the code (discovered at build time).
 
-Variables : voir [`.env.example`](.env.example).
+Variables: see [`.env.example`](.env.example).
 
-## Exigences non fonctionnelles
+## Non-functional requirements
 
-| Réf | Exigence | Cible | État |
+| Ref | Requirement | Target | Status |
 |---|---|---|---|
-| RNF-01 | photo → diagnostic | < 20 s | mesuré par étape, affiché dans l'UI |
-| RNF-02 | latence UI hors API | < 100 ms | rendu React, aucune requête au clic |
-| RNF-03 | précision de classification | ≥ 80 % sur 12 types | 100 % sur le corpus synthétique (5/5), à confirmer sur copies réelles |
-| RNF-04 | faux positifs sur copie propre | 0 toléré | test dédié : 0 appel, 0 faute |
-| RNF-05 | mobile (photo directe) | obligatoire | `capture="environment"`, cibles ≥ 48 px |
-| RNF-06 | accessibilité AA, clavier, ≥ 16 px | obligatoire | focus visible, `aria-live`, textes ≥ 16 px |
-| RNF-07 | bundle initial | < 300 Ko gzip | 127 Ko gzip (JS + CSS) |
-| RNF-08 | disponibilité pendant le jugement | 24h/24 | GitHub Pages (statique, sans backend) |
-| RNF-09 | quota épuisé → message clair + BYOK | obligatoire | 429 traduit en français, champ BYOK |
-| RNF-10 | aucune dépendance payante | obligatoire | 0 $ |
+| RNF-01 | photo → diagnosis | < 20 s | measured per step, shown in the UI; depends on which upstream model answers |
+| RNF-02 | UI latency outside the API | < 100 ms | React rendering, no request on click |
+| RNF-03 | classification accuracy | ≥ 80 % on 12 types | 100 % on the synthetic corpus (5/5), to confirm on real papers |
+| RNF-04 | false positives on a clean paper | 0 tolerated | dedicated test: 0 calls, 0 mistakes |
+| RNF-05 | mobile (direct photo) | required | `capture="environment"`, targets ≥ 48 px |
+| RNF-06 | accessibility AA, keyboard, ≥ 16 px | required | visible focus, `aria-live`, text ≥ 16 px |
+| RNF-07 | initial bundle | < 300 KB gzip | ~127 KB gzip JS + 8 KB CSS |
+| RNF-08 | availability during judging | 24/7 | GitHub Pages (static, no backend) |
+| RNF-09 | quota exhausted → clear message + BYOK | required | plain-English message, BYOK field |
+| RNF-10 | no paid dependency | required | $0 |
 
-## Vie privée
+## Privacy
 
-Aucune image n'est persistée, ni côté client ni côté proxy (RNF-P1). Le nom est masqué avant tout
-affichage (RNF-P2). Le proxy ne journalise que l'horodatage, le statut HTTP et la latence (RNF-P3).
-L'historique local est exportable et supprimable en un clic (RNF-P4), et l'UI le dit (RNF-P5).
+No image is persisted, neither on the client nor on the proxy. The name is masked before any
+display. The proxy only logs the timestamp, the HTTP status and the latency. Local history can be
+exported and deleted in one click, and the UI says so.
 
-## CI et infrastructure
+## CI and infrastructure
 
-CI en moins de 5 minutes sur runners hébergés GitHub (`ubuntu-latest`) ; trois checks requis
-(`ci`, `ci-budget`, `couche0`) ; merge par la file Mergify. Historique : la CI tournait sur des
-runners self-hosted, absents de ce dépôt — retour aux runners hébergés le 14/11. Détails :
-[`docs/INFRA-CI.md`](docs/INFRA-CI.md).
+CI in under 5 minutes on GitHub-hosted runners (`ubuntu-latest`); three required checks (`ci`,
+`ci-budget`, `couche0`); merges through the Mergify queue; GitHub Pages deploys on every push to
+`main`. Details: [`docs/INFRA-CI.md`](docs/INFRA-CI.md).
 
-## Déclaration des outils IA
+## AI tools declaration
 
-Obligatoire et assumée : [`docs/DECLARATION-IA.md`](docs/DECLARATION-IA.md).
+Required and owned: [`docs/DECLARATION-IA.md`](docs/DECLARATION-IA.md).
 
 ## Licence
 
-MIT — voir [`LICENSE`](LICENSE).
+MIT — see [`LICENSE`](LICENSE).

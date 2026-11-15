@@ -106,12 +106,14 @@ describe('crash test — pannes réseau et amont', () => {
     vi.stubGlobal('fetch', fetchMock)
 
     const erreur = await completer(transport, requete).catch((e: unknown) => e)
+    // Horloge rétablie AVANT les assertions : un échec ici ne doit pas fausser
+    // le temps des tests suivants (budget « dépassé » en cascade).
+    horloge.mockRestore()
     expect(erreur).toBeInstanceOf(ErreurLLM)
-    expect((erreur as ErreurLLM).message).toContain('trop de temps')
+    expect((erreur as ErreurLLM).message).toContain('too slow')
     // Le budget doit couper la chaîne avant la fin, quelles que soient les bornes.
     expect(fetchMock.mock.calls.length).toBeLessThan(CHAINE_MODELES.length)
     expect(fetchMock.mock.calls.length).toBeGreaterThan(0)
-    horloge.mockRestore()
   })
 
   it('corps invalide ou vide : ErreurLLM, jamais une SyntaxError', async () => {

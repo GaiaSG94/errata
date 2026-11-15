@@ -1,73 +1,77 @@
-# Formulaire Devpost — champs pré-remplis
+# Devpost form — pre-filled fields
 
-## Nom du projet
+Copy each section into the matching Devpost field.
+
+## Project name
 
 Errata
 
-## Tagline (≤ 60 caractères)
+## Tagline (≤ 60 characters)
 
-`Elle t'entraîne sur ce que toi tu rates.` (39 caractères)
+`Revise the mistake you repeat, not the whole chapter.` (53 characters)
 
-Alternative : `Photographie ta copie corrigée. Trouve ta faille.` (48)
+Alternative: `Snap your corrected test. Find your habit. Fix it.` (50)
 
-## Description courte
+## Short description
 
-Raturé photographie ta copie de maths corrigée, lit les annotations du professeur, type chaque
-faute dans une taxonomie fermée de 12 erreurs, et fabrique l'exercice qui travaille exactement
-celle que tu répètes. Au bout de trois copies, tu ne vois plus une liste de fautes : tu vois ton
-profil d'erreur. Aucune copie n'est conservée, l'historique reste sur l'appareil.
+Errata reads your corrected math test, types every mistake against a closed list of 12 error types,
+and builds the one short drill that works on the mistake you keep repeating. After three papers you
+no longer see a list of mistakes: you see your error profile. No paper is ever stored; history stays
+on your device.
 
 ## Inspiration
 
-Un élève regarde sa copie corrigée dix secondes et la range. La seule information vraiment
-personnelle de sa scolarité — la liste de ses erreurs récurrentes — est jetée en 24 heures. Tous les
-outils existants partent de l'énoncé vierge pour donner la réponse. Aucun ne part de la correction,
-qui contient déjà le diagnostic.
+A student looks at a corrected test for ten seconds and puts it away. The most personal information
+of their schooling — the list of the mistakes they keep making — is thrown away within a day. Every
+existing tool starts from the blank exercise to give the answer. None starts from the correction,
+which already contains the diagnosis.
 
 ## What it does
 
-Six étapes : normalisation de la photo, masquage du nom, extraction des annotations du professeur
-par vision multimodale, classification dans une taxonomie fermée (E01 signe perdu → E12 conclusion
-non justifiée, plus E99 non typée), agrégation locale du profil d'erreur, génération d'un exercice
-ciblé vérifié par un garde-fou de pertinence. Mode professeur : le paquet de copies donne la
-statistique d'erreurs de la classe et un export CSV.
+Six steps: the photo is normalised, the student's name is masked, a multimodal vision model reads the
+teacher's marks, each mistake is classified into a closed taxonomy (E01 lost sign → E12 unjustified
+conclusion, plus E99 untyped), the error profile is aggregated locally, and a targeted drill is
+generated and checked by a relevance guard (right type, doesn't give the answer away, right level).
+A clean paper gives "no mistakes found" and no drill — Errata never invents a mistake. Teacher mode:
+a batch of papers gives the class's error statistics, "what to re-teach on Monday", and a CSV export.
 
 ## How we built it
 
-Vite + React + TypeScript + Tailwind, stockage IndexedDB, aucun backend de données. Un proxy edge
-minimal (fonction Vercel, variante Cloudflare Worker) cache la clé InferHub et borne le quota ; un
-mode BYOK prend le relais si le quota est épuisé. Les prompts sont versionnés dans `prompts/`. CI
-en moins de 5 minutes sur runners self-hosted, merge par file Mergify, conflits résolus par un agent
-branché sur InferHub.
+Vite + React + TypeScript + Tailwind, Zod schemas on every model answer, IndexedDB storage, no data
+backend. A minimal edge proxy (Cloudflare Worker) keeps the InferHub key server-side, caps the
+quota, falls back across a chain of seven vision models and trips a 60-second circuit breaker; a
+BYOK mode takes over if the quota runs out. Prompts are versioned in `prompts/`. 206 offline tests,
+CI in under 5 minutes on GitHub-hosted runners, merges through a Mergify queue, GitHub Pages deploy
+on every push. An offline demo replays answers recorded on the real model, with their real timings.
 
 ## Challenges we ran into
 
-L'OCR classique est inutilisable sur le manuscrit. La première version inventait des fautes sur une
-copie propre : `copiePropre` est devenu une réponse attendue, et l'étape de classification n'est
-plus appelée dans ce cas. Un modèle qui rend 0,95 de confiance partout rend le seuil inutile :
-d'où une consigne de calibration et un corpus qui contient une annotation à 0,31 devant finir E99.
-Enfin, la génération dérivait vers la notion générale au lieu du geste fautif : d'où le second
-passage de vérification.
+Classic OCR is unusable on handwriting, so everything goes through one multimodal call. The first
+version invented mistakes on a clean paper: `copiePropre` became an expected answer, and
+classification is no longer called in that case. A model that returns 0.95 confidence everywhere
+makes the threshold useless: hence a calibration instruction and a corpus annotation at 0.31 that
+must end up E99. Generation drifted to the general topic instead of the faulty gesture: hence the
+second verification pass. And on the last day the vision marketplace answered `503` for hours: we
+added a global time budget, progress messages and an honest error with **Try again**.
 
 ## Accomplishments that we're proud of
 
-Zéro faux positif sur copie propre, vérifié par un test qui interdit tout appel réseau dans ce cas.
-Un diagnostic mesurable plutôt qu'une liste de phrases. Un bundle de 94 Ko gzip. Une UI qui
-n'ajoute jamais de rouge à une copie déjà annotée en rouge.
+Zero false positives on a clean paper, enforced by a test that forbids any network call in that
+case. A measurable diagnosis instead of a list of sentences. A ~127 KB gzip bundle. A UI that never
+adds red to a paper already marked in red.
 
 ## What we learned
 
-Un diagnostic n'a de valeur que s'il est stable : la même copie analysée deux fois doit donner le
-même type. La taxonomie fermée et le seuil de confiance ne sont pas des contraintes techniques, ce
-sont les conditions de confiance de l'élève dans son propre profil. Et l'honnêteté est une
-fonctionnalité : dire « exercice non disponible pour ce type » rapporte plus de crédibilité qu'une
-animation.
+A diagnosis is only worth something if it is stable: the same paper analysed twice must give the
+same type. The closed taxonomy and the confidence threshold aren't technical constraints, they are
+what lets a student trust their own profile. And honesty is a feature: saying "no exercise available
+for this type" earns more credibility than any animation.
 
-## What's next for Raturé
+## What's next for Errata
 
-Autres matières (l'architecture le permet déjà, il manque les taxonomies), validation pédagogique
-sur une classe réelle, intégration LMS pour l'export professeur, et suivi de la décroissance d'un
-type d'erreur au fil des copies.
+Other subjects (the architecture already allows it; the taxonomies are missing), teaching validation
+on a real class, LMS integration for the teacher export, and a second vision provider so that one
+marketplace's outage never blocks a live analysis.
 
 ## Built with
 
@@ -75,30 +79,31 @@ type d'erreur au fil des copies.
 - react
 - vite
 - tailwindcss
-- indexeddb (idb-keyval)
 - zod
+- indexeddb (idb-keyval)
 - vitest
-- inferhub (API [OI]-compatible multimodale)
-- vercel serverless functions / cloudflare workers
-- github pages
-- github actions (runners self-hosted)
+- inferhub (OpenAI-compatible multimodal API)
+- cloudflare-workers
+- github-pages
+- github-actions
 - mergify
 
-## Tracks à cocher
+## Tracks to select
 
 - [x] Best AI Hack
 - [x] Best Deployed / Shipped App
 - [x] Best Design & UX
 - [x] Overall
-- [ ] Hardware (aucune pièce physique : ne pas cocher)
+- [ ] Hardware (no physical part: don't select)
 
-## Liens
+## Links
 
-- Démo : https://gaiasg94.github.io/errata/
-- Code : https://github.com/GaiaSG94/errata
-- Proxy edge : https://errata-proxy.rature.workers.dev/health
-- Vidéo : _(à coller, lien public vérifié en navigation privée)_
+- Live demo: https://gaiasg94.github.io/errata/
+- Code: https://github.com/GaiaSG94/errata
+- Edge proxy health: https://errata-proxy.rature.workers.dev/health
+- Video: _(paste the public link, checked in a private window)_
 
-## Équipe
+## Team
 
-1 membre : Baptiste Faisy — conception, taxonomie, prompts, code, CI, déploiement.
+_(To fill in by the submitter: list everyone who contributed to the code, each registered on Devpost
+for IceHacks. The repository history is public; the team field must match it.)_
