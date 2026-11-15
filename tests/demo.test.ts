@@ -4,10 +4,13 @@ import { PROMPT_ANALYSE, decouperAnalyse } from '../src/pipeline/analyse'
 import {
   COPIES_DEMO,
   ID_COPIES_DEMO,
+  TOUR_DEMO,
   clientDemoPour,
   copieDemo,
   etapeDe,
+  echantillonDe,
   origineDemo,
+  titreCarte,
 } from '../src/pipeline/demo'
 import { PROMPT_GARDE_FOU, PROMPT_GENERATION, verdictAccepte } from '../src/pipeline/exercise'
 import { PROMPT_REVUE } from '../src/pipeline/revue'
@@ -81,5 +84,57 @@ describe('mode démonstration', () => {
     if (!copie) return // toutes les copies ont une revue enregistrée : rien à tester
     const client = clientDemoPour(copie.id, { attente: false })
     await expect(client({ system: PROMPT_REVUE, user: 'x' })).rejects.toThrow(/recapture/)
+  })
+})
+
+/**
+ * Corpus de démo v2 (copies du 15/11) : quatre copies du même élève en
+ * terminale — la faute de signe qui revient, puis disparaît. Les expectations
+ * ci-dessous sont **mesurées** (docs/VALIDATION-MODELE.md) : si une récapture
+ * change un résultat, ce test échoue et la documentation doit être mise à jour
+ * dans le même commit — pas l'inverse.
+ */
+describe('corpus de démo v2 — Jordan, Grade 12', () => {
+  const ATTENDU: Record<string, string> = {
+    'v2-copie-1': 'E01',
+    'v2-copie-2': 'E01',
+    'v2-copie-3': 'E01',
+    'v2-copie-4': 'propre',
+  }
+
+  it('les quatre cartes portent les titres annoncés', () => {
+    const titres = Object.keys(ATTENDU).map((id) => titreCarte(echantillonDe(id)!))
+    expect(titres).toEqual([
+      'Jordan · Test 3 — Algebra & derivatives',
+      'Jordan · Test 4 — Antiderivatives',
+      'Jordan · Test 5 — Definite integrals',
+      'Jordan · Quiz — Integration',
+    ])
+  })
+
+  it.each(Object.entries(ATTENDU))('%s est enregistrée avec le type attendu', (id, dominant) => {
+    const copie = copieDemo(id)
+    expect(copie, `${id} absente du corpus de démo`).toBeDefined()
+    expect(copie!.enregistrement.dominant).toBe(dominant)
+  })
+
+  it('la copie 1 détecte aussi E03, la copie propre aucun code', () => {
+    const analyse = JSON.parse(copieDemo('v2-copie-1')!.enregistrement.reponses.analyse!) as {
+      annotations: { code: string }[]
+      copiePropre: boolean
+    }
+    const codes = analyse.annotations.map((annotation) => annotation.code)
+    expect(codes).toContain('E03')
+    expect(codes).toContain('E01')
+    const propre = JSON.parse(copieDemo('v2-copie-4')!.enregistrement.reponses.analyse!) as {
+      annotations: unknown[]
+      copiePropre: boolean
+    }
+    expect(propre.copiePropre).toBe(true)
+    expect(propre.annotations).toHaveLength(0)
+  })
+
+  it('le tour guidé suit les quatre copies de Jordan', () => {
+    expect(TOUR_DEMO).toEqual(['v2-copie-1', 'v2-copie-2', 'v2-copie-3', 'v2-copie-4'])
   })
 })

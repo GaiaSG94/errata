@@ -32,16 +32,25 @@ manuscrite Caveat, annotations du professeur en rouge) :
   contraste réduit) pour approcher une photo de téléphone : la copie 1, la
   copie 6 et la copie propre.
 
-`corpus/demo/` contient les **3 photos** de la démonstration hors ligne : les copies d'un même
+`corpus/demo/` contient les **photos** de la démonstration hors ligne : les copies d'un même
 élève (`corpus/copies-demo.json`), rendues puis passées par une **chaîne caméra** (perspective,
 lumière inégale, vignette, grain, flou, ombre portée sur une table) pour ressembler à de vraies
 photos de téléphone — pas à des captures d'écran. Elles sont générées par
 `python3 scripts/generer-copies.py --demo`, jamais éditées à la main.
 
-Le fichier `corpus/copies-demo.json` est la source de vérité de cette histoire : trois devoirs du
-même élève, où la faute de **signe** revient puis se corrige. Les réponses de la démo
-(`corpus/reponses/`) sont **réenregistrées** sur ces photos avec le vrai modèle — donc si tu touches
-à `copies-demo.json`, il faut recapturer (`tests/live/enregistrer-demo.test.ts`).
+Les quatre **`v2-copie-1..4.jpg`** sont les copies v2 (15/11) : Jordan Lee, Grade 12 — B, niveau
+terminale (primitives, dérivées, intégrales définies), quatre contrôles d'octobre à novembre
+dont la faute de signe revient — puis disparaît sur le quiz propre. Leur source est la maquette
+`copie-v2.html` du dossier design (rendu 1240 × 1240, petits carreaux, stylo rouge du prof) ;
+le PNG d'origine reste côté design. Les deux autres (`copie-demo-5/6`) sont les photos de la
+première version du corpus, gardées pour les cartes « analyse en direct ».
+
+Le fichier `corpus/copies-demo.json` est la source de vérité de cette histoire : les copies v2
+y décrivent le contrôle, le niveau, les fautes visées et les lignes du manuscrit. Les réponses
+de la démo (`corpus/reponses/`) sont **réenregistrées** sur ces photos avec le vrai modèle —
+donc si tu touches à `copies-demo.json` ou aux images, il faut recapturer
+(`tests/live/enregistrer-demo.test.ts`, `RECORD_COPIES=v2-copie-1,…` pour ne capturer qu'un
+sous-ensemble).
 
 ## Où trouver de vraies copies (source externe)
 
@@ -54,8 +63,8 @@ corrigées et annotées par le professeur ne sont pas librement téléchargeable
 - des PDF académiques de **corrections officielles** (qui ne montrent pas les erreurs d'élèves).
 
 **Le chemin validé reste donc : photographier 5 vraies copies corrigées + 2 copies propres**
-(protocole ci-dessous). En attendant, `corpus/demo/` fournit 3 « photos » photoréalistes du même
-élève, et `corpus/images/` le corpus synthétique contrôlé.
+(protocole ci-dessous). En attendant, `corpus/demo/` fournit 6 « photos » photoréalistes — dont
+4 copies terminale du même élève — et `corpus/images/` le corpus synthétique contrôlé.
 
 Le `manifeste.json` porte la vérité terrain (`fichier`, `dominant`,
 `degradee`) : il est **généré en même temps que les images**, donc l'attente du

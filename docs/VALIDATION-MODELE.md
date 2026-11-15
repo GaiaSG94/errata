@@ -170,6 +170,58 @@ tenue, y compris en journée.
 
 Le seul échec reste la copie 8 (E09 attendu, E10 rendu) : ambiguïté de la fixture, déjà documentée.
 
+## Corpus v2 (copies Jordan, Grade 12) — mesuré le 15 novembre 2026
+
+Le corpus de démo a été refait sur **4 copies v2** (Jordan Lee, Grade 12 — B, niveau terminale :
+développement, dérivées, primitives, intégrales définies). La faute y revient toujours — **le
+signe** — jusqu'à disparaître sur un quiz propre. Les réponses ont été réenregistrées sur ces
+photos (étape 3+4 fusionnée, exercice, garde-fou), résultats dans `corpus/reponses/v2-copie-*.json`.
+
+| Copie | Attendu | Obtenu | Codes détectés | Fautes | Extraction | Modèle(s) |
+|---|---|---|---|---|---|---|
+| 1 · Test 3 — Algebra & derivatives | E01, **et E03** | **E01** | E03, E01, E01, E01 | 4 | 131,6 s | `zai/glm-4.6v`, `ag/gemini-3.8-flash-high` |
+| 2 · Test 4 — Antiderivatives | E01 | **E01** | E01, E01 | 2 | 178,8 s | `zai/glm-4.6v`, `ag/gemini-3.8-flash-high` |
+| 3 · Test 5 — Definite integrals | E01 | **E01** | E01, E01 | 2 | 299,6 s | `ag/gemini-3.8-flash-high`, `zai/glm-4.6v` |
+| 4 · Quiz — Integration | aucune | **aucune** (`copiePropre`) | — | 0 | 48,7 s | `zai/glm-4.6v` |
+
+**4 / 4 conformes.** E01 dominant sur les trois copies à fautes, E03 bien détecté sur la copie 1
+(le produit `(a − b)²`), et **zéro faute** sur la copie propre — RNF-04 tenu sur le nouveau
+corpus. Le garde-fou a accepté l'exercice sur les trois copies à fautes (3/3 critères), avec des
+exercices rendus au bon niveau (`Grade 12`). Aucun E99 : les signes ont été lus sans ambiguïté,
+y compris `∫ sin = −cos` et `∫ e^(−x) = −e^(−x)`.
+
+### Réplication indépendante (19 h-21 h 45, même jour)
+
+Une seconde capture, complète et indépendante — mêmes quatre PNG source, réencodés en JPEG à part,
+fenêtre amont différente — donne **le même typage sur les quatre copies** : E01 dominant avec E03
+présent sur la copie 1, E01 sur les copies 2 et 3, zéro faute sur la copie 4. Latences
+d'extraction nettement plus courtes dans cette fenêtre : 53,8 s / 30,6 s / 18,1 s / 6,7 s. Les
+enregistrements retenus restent la première capture ; la réplication sert uniquement à corroborer
+la mesure. Les expectations sont verrouillées par `tests/demo.test.ts` (« corpus de démo v2 »).
+
+### Ce que l'amont a coûté : 5 h de saturation
+
+Les deux captures ont demandé **~60 tentatives** entre 17 h et 21 h 45 (les essais sont séparés
+par des pauses, un essai échoué n'écrit rien). L'amont était en 503 « no available provider »
+sur **les 7 modèles** de la chaîne, par fenêtres ; seuls `zai/glm-4.6v` et
+`ag/gemini-3.8-flash-high` ont répondu par intermittence (l'amont compte 514 modèles, mais les
+autres familles sont hors enchère pour ce compte et une partie n'accepte pas l'image en entrée).
+Un essai échoué n'écrit rien : le fichier de réponses n'est écrit qu'à la fin du chemin complet,
+donc **un enregistrement = une capture**, jamais deux.
+
+Deux choses à dire franchement :
+
+1. **Les durées capturées sont des durées de marché**, pas des temps de modèle : l'extraction
+   affiche jusqu'à 299 s (copie 3) parce que la chaîne a rejoué plusieurs modèles morts avant
+   qu'un ne réponde. Le rejeu hors ligne n'attend que les durées plafonnées (le tour guidé est
+   accéléré, la copie seule rejoue le rythme réel) : c'est honnête — ce sont les durées
+   réellement mesurées — mais ce ne sont pas des temps de modèle.
+2. **Une sonde antérieure (17 h) a vu la ligne `g'(x) = 6x e^(−x) + (3x² − 1)e^(−x)` de la
+   copie 1 revenir E99** (non typée) là où la capture retenue la note E01 à 0,75. E99 est hors
+   profil : le dominant reste E01 dans les deux cas, mais la règle « une faute = un type » reste
+   à la merci d'un modèle qui hésite entre « signe perdu » et « non typée » sur une dérivée de
+   produit. Signalé ici plutôt que lissé.
+
 ## Ce qui reste à valider
 
 - [ ] 5 **vraies** copies corrigées photographiées + 2 copies propres : même

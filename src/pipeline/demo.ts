@@ -113,6 +113,17 @@ export function echantillonDe(id: string): Echantillon | undefined {
   return COPIES_ECHANTILLON.find((e) => e.id === id)
 }
 
+/**
+ * Titre de carte de l'écran « Sample papers » : « Jordan · Test 3 — Algebra &
+ * derivatives ». L'élève d'abord, puis le contrôle, puis le titre du contrôle ;
+ * la date reste dans le manifeste, elle n'occupe pas la carte.
+ */
+export function titreCarte(echantillon: Echantillon): string {
+  const eleve = echantillon.eleve.split(' ')[0] ?? echantillon.eleve
+  const devoir = echantillon.devoir.split(' · ')[0] ?? echantillon.devoir
+  return `${eleve} · ${devoir} — ${echantillon.titre}`
+}
+
 function estEnregistre(e: Echantillon): e is Echantillon & { enregistrement: Enregistrement } {
   return e.enregistrement !== null
 }

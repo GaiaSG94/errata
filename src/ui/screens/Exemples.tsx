@@ -1,4 +1,4 @@
-import { COPIES_ECHANTILLON, echantillonDe } from '../../pipeline/demo'
+import { COPIES_ECHANTILLON, echantillonDe, titreCarte } from '../../pipeline/demo'
 import { useRature } from '../../etat/useRature'
 
 /** Cartes affichées, dans l'ordre : la trajectoire de Jordan, puis le live. */
@@ -28,7 +28,11 @@ function etiquette(echantillon: (typeof COPIES_ECHANTILLON)[number]): string {
   if (echantillon.enregistrement.dominant === 'propre') return 'Clean paper'
   const types = echantillon.typesAttendus.filter((code) => code !== 'E11')
   if (types.length === 0) return 'Typed mistakes'
-  return echantillon.enregistrement.dominant === types[0] ? `${types.join(' · ')} again` : types.join(' · ')
+  // Plusieurs types visés : on les nomme tous (« E01 · E03 », maquette v9).
+  // Un seul : c'est la faute qui revient, elle le dit.
+  if (types.length > 1) return types.join(' · ')
+  const type = types[0]!
+  return echantillon.enregistrement.dominant === type ? `${type} again` : type
 }
 
 function classeEtiquette(echantillon: (typeof COPIES_ECHANTILLON)[number]): string {
@@ -66,7 +70,8 @@ export function Exemples() {
           const live = HABILLAGE_LIVE[echantillon.id]
           // Pas d'enregistrement = analyse en ligne (proxy edge) : on l'annonce.
           const estLive = Boolean(live) || !echantillon.enregistrement
-          const titre = live?.titre ?? `${echantillon.eleve.split(' ')[0]} · ${echantillon.devoir}`
+          // « Jordan · Test 3 — Algebra & derivatives » (cf. titreCarte).
+          const titre = live?.titre ?? titreCarte(echantillon)
           const resume = live?.resume ?? echantillon.resume
           return (
             <button
