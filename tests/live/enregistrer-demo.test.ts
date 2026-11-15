@@ -127,7 +127,7 @@ async function enregistrer(nom: string) {
         extraitCopie: extraction.annotations.map((a) => a.ligne).slice(0, 6).join('\n'),
         transport,
         client: async (requete: RequeteLLM) => {
-          const cle = requete.system.includes('Garde-fou') ? 'verdict' : 'exercice'
+          const cle = requete.system.includes('Garde-fou') || requete.system.includes('Relevance guardrail') ? 'verdict' : 'exercice'
           return clientEnregistreur(brut, cle)(requete)
         },
       }),
@@ -146,7 +146,14 @@ async function enregistrer(nom: string) {
         nbFautes: propre ? 0 : diagnostic.nbFautes,
         revues: revue.revues,
         durees,
-        reponses: Object.fromEntries(Object.entries(brut).map(([cle, liste]) => [cle, liste[0]])),
+        // Dernière réponse de chaque étape, pas la première : le garde-fou peut
+        // refuser un exercice et le pipeline en régénère un second. Rejouer la
+        // première réponse rejouerait un refus, alors que le produit a bien
+        // servi la seconde. Pour les étapes appelées une seule fois, c'est
+        // identique.
+        reponses: Object.fromEntries(
+          Object.entries(brut).map(([cle, liste]) => [cle, liste[liste.length - 1]]),
+        ),
       },
       null,
       2,

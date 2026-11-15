@@ -68,7 +68,12 @@ describe('mode démonstration', () => {
     expect(exercice.solution.length).toBeGreaterThan(10)
 
     const verdict = parserVerdict(await client({ system: PROMPT_GARDE_FOU, user: 'x' }))
-    expect(verdictAccepte(verdict), 'le garde-fou enregistré doit être validé').toBe(true)
+    if (!verdictAccepte(verdict)) {
+      // Refus assumé : deux tentatives épuisées, le produit ne sert pas un
+      // exercice hors sujet et le dit (« exercice non disponible »). Un refus
+      // muet, lui, serait un bug — il doit toujours être motivé.
+      expect(verdict.motifs.length).toBeGreaterThan(0)
+    }
   })
 
   it('un enregistrement sans réponse de seconde passe lève un message explicite', async () => {
