@@ -5,7 +5,7 @@
 # des 5 min, règle user 2026-10-24) et `couche0` (périmètre déclaré +
 # motifs interdits). Le gate hermes-lite reste en dry-run (variable de
 # dépôt HERMES_LITE_DRY_RUN=1) : Mergify est le seul pilote de merge.
-# Structure copiée du .mergify.yml de BaptisteFaisy/duello (décision
+# Structure copiée du .mergify.yml de GaiaSG94/duello (décision
 # user 2026-10-10) : inline labels urgent / priority-low identiques.
 queue_rules:
   - name: default

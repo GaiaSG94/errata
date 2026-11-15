@@ -61,7 +61,7 @@ REESSAYABLES = {402, 429, 500, 502, 503, 504}
 COOLDOWN_S = 60
 
 ORIGINES = [
-    "https://tradoooo.github.io",
+    "https://gaiasg94.github.io",
     "http://localhost:5173",
     "http://127.0.0.1:5173",
 ]

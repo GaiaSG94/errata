@@ -251,7 +251,7 @@ def binaire_zeroclaw():
     """Chemin de `zeroclaw` : PATH, puis les emplacements connus des runners."""
     candidats = [shutil.which("zeroclaw")] + [
         os.path.join(maison, ".cargo", "bin", "zeroclaw")
-        for maison in (os.path.expanduser("~"), "/home/baptiste")]
+        for maison in (os.path.expanduser("~"), "/home/gaia")]
     candidats.append("/usr/local/bin/zeroclaw")
     for chemin in candidats:
         if chemin and os.path.isfile(chemin) and os.access(chemin, os.X_OK):
@@ -269,7 +269,7 @@ def lancer_agent(prompt, dossier, budget=BUDGET_S):
     binaire = binaire_zeroclaw()
     if binaire is None:
         return False, INFRA + ("zeroclaw introuvable sur ce runner (PATH, "
-                               "~/.cargo/bin, /home/baptiste/.cargo/bin, "
+                               "~/.cargo/bin, /home/gaia/.cargo/bin, "
                                "/usr/local/bin)")
     conf = config_isolee()
     if conf is None:
@@ -351,8 +351,8 @@ def commiter(pr):
     subprocess.run(["git", "add", "-A"] + list(EXCLUSIONS_GIT),
                    capture_output=True, text=True, timeout=120)
     proc = subprocess.run(
-        ["git", "-c", "user.name=BaptisteFaisy",
-         "-c", "user.email=119856854+BaptisteFaisy@users.noreply.github.com",
+        ["git", "-c", "user.name=GaiaSG94",
+         "-c", "user.email=gsg.corbeille@outlook.fr",
          "commit", "-q", "-m",
          "fix(isee): correctif CI proposé par l'agent fw (PR #%s)" % pr],
         capture_output=True, text=True, timeout=120)

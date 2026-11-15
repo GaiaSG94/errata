@@ -52,8 +52,8 @@ jobs:
         run: |
           set -uo pipefail
           [ -f docs/LATENCE.md ] || { echo "aucun relevé à publier"; exit 0; }
-          git config user.name "BaptisteFaisy"
-          git config user.email "baptiste.faisy@gmail.com"
+          git config user.name "GaiaSG94"
+          git config user.email "gsg.corbeille@outlook.fr"
           BRANCHE="donnees/latence"
           # On ne force JAMAIS : un commit par heure sur la branche de données,
           # l'historique des relevés reste lisible. (Un push forcé serait

@@ -1,4 +1,4 @@
-﻿# pr-auto-merge â€” file de merge automatique : chaque PR interne est
+# pr-auto-merge â€” file de merge automatique : chaque PR interne est
 # rebasÃ©e sur main si en retard (BEHIND) ou en conflit (DIRTY) ; les PR
 # prÃªtes sont mergÃ©es (rebase) dÃ¨s que les 3 checks requis sont verts.
 # La seule porte reste la CI ; pas de gate humaine.
@@ -264,7 +264,7 @@ jobs:
         id: build
         env:
           # v18 â€” lectures avec le token de l'installation (quota propre).
-          # Le PAT de Baptiste partage ses 5000 points/h GraphQL avec tous ses
+          # Le PAT partage ses 5000 points/h GraphQL avec tous les
           # agents ; saturÃ©, il faisait tomber `discover` sur
           # Â« API rate limit already exceeded Â» â†’ Â« liste des PR illisible â€”
           # file en pause Â» â†’ plus AUCUNE PR n'entrait en file (vÃ©cu le 31/10
@@ -334,7 +334,7 @@ jobs:
           # `--jq 'â€¦'` ferme le guillemet simple et gh meurt sur Â« unknown
           # arguments Â» (vÃ©cu le 29/10 : `discover` rendait une matrice vide en
           # silence et plus aucune PR n'Ã©tait balayÃ©e).
-          FILTRE='[.[] | select(.headRepository.nameWithOwner == "Tradoooo/rature")
+          FILTRE='[.[] | select(.headRepository.nameWithOwner == "GaiaSG94/errata")
             | {pr: .number, sha: .headRefOid, branch: .headRefName,
                state: .mergeStateStatus, draft: (.isDraft | tostring),
                main: .baseRefOid, maj: .updatedAt}]
@@ -454,8 +454,8 @@ jobs:
       - name: Rebase / rÃ©sout / merge la PR ${{ matrix.pr }}
         env:
           # v18 â€” mÃªme partage qu'en `discover` : `gh` lit avec le token de
-          # l'installation (quota sÃ©parÃ© du PAT, que tous les agents de
-          # Baptiste Ã©puisent), et n'Ã©crit qu'avec le PAT (`ghe`), parce que
+          # l'installation (quota sÃ©parÃ© du PAT, que tous les agents
+          # Ã©puisent), et n'Ã©crit qu'avec le PAT (`ghe`), parce que
           # `github-actions[bot]` n'a pas le droit de commander Ã  Mergify.
           GH_TOKEN: ${{ github.token }}
           GH_ECRITURE: ${{ secrets.AUTOMERGE_PAT }}
@@ -471,7 +471,7 @@ jobs:
           # v28 â€” `0` rend la rÃ©paration d'un test rouge au balayeur (le
           # workflow `triage-rouge` la prend sinon, avec l'indice du triage).
           TRIAGE_TEST: ${{ vars.TRIAGE_TEST }}
-          REPO: Tradoooo/rature
+          REPO: GaiaSG94/errata
           PR: ${{ matrix.pr }}
           SHA: ${{ matrix.sha }}
           BRANCH: ${{ matrix.branch }}
@@ -894,8 +894,8 @@ jobs:
             printf 'CHANGELOG.md merge=union\n' >> .git/info/attributes
             # IdentitÃ© du propriÃ©taire (rÃ¨gle du dÃ©pÃ´t) : un commit poussÃ© par
             # le balayage doit Ãªtre attribuable, jamais anonyme.
-            git config user.name "BaptisteFaisy"
-            git config user.email "119856854+BaptisteFaisy@users.noreply.github.com"
+            git config user.name "GaiaSG94"
+            git config user.email "gsg.corbeille@outlook.fr"
             export GIT_EDITOR=true
             CLONE_FAIT=1
           }
