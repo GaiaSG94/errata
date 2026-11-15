@@ -1,4 +1,4 @@
-# Raturé — write-up
+# Errata — write-up
 
 ## 1. Le problème
 
@@ -21,7 +21,7 @@ Tout le monde utilise l'IA pour **obtenir la réponse**. Photomath résout l'exe
 ChatGPT explique. Ces outils suppriment l'effort — ils ne ciblent aucune lacune, parce qu'ils ne
 connaissent pas l'histoire de l'élève.
 
-Raturé inverse le geste : **on ne photographie pas l'énoncé, on photographie la correction.**
+Errata inverse le geste : **on ne photographie pas l'énoncé, on photographie la correction.**
 
 La copie annotée est le seul artefact qui contient déjà le diagnostic. Il suffisait de le lire.
 
@@ -88,7 +88,7 @@ modèle multimodal, en un seul appel.
 
 **Les faux positifs sur copie propre.** La première version du prompt d'extraction « trouvait » des
 fautes là où le professeur n'avait rien écrit — c'est le pire défaut possible pour ce produit : un
-Raturé qui invente des erreurs détruit la confiance instantanément. Correction en deux temps :
+Errata qui invente des erreurs détruit la confiance instantanément. Correction en deux temps :
 `copiePropre` est devenu une réponse explicitement attendue du modèle, et l'étape de classification
 **n'est plus appelée du tout** dans ce cas. Le test correspondant vérifie qu'aucun appel réseau
 n'est émis.
@@ -123,7 +123,7 @@ comportements rapportent plus de crédibilité que n'importe quelle animation.
 - **Autres matières** : l'architecture le permet déjà, il manque les taxonomies (physique, puis
   langues).
 - **Validation pédagogique** : mesurer sur une classe réelle si travailler son type dominant
-  améliore le résultat au contrôle suivant. Sans cette mesure, Raturé reste une bonne intuition.
+  améliore le résultat au contrôle suivant. Sans cette mesure, Errata reste une bonne intuition.
 - **Intégration LMS** : un professeur qui exporte sa statistique de classe veut la déposer dans
   Pronote ou Moodle, pas dans un CSV.
 - **Suivi de progression** : montrer la décroissance d'un type d'erreur au fil des copies, c'est la

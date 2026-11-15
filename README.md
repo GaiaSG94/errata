@@ -1,18 +1,18 @@
-# Raturé 🖊️
+# Errata 🖊️
 
 > Tu photographies ta copie corrigée. Elle trouve l'erreur que tu répètes — et te fabrique
 > l'exercice exactement dessus.
 
-[![Démo publique](https://img.shields.io/badge/démo-publique-f5c518?style=flat-square)](https://tradoooo.github.io/rature/)
-[![CI](https://img.shields.io/github/actions/workflow/status/Tradoooo/rature/ci.yml?branch=main&label=ci&style=flat-square)](https://github.com/Tradoooo/rature/actions/workflows/ci.yml)
-[![Tests](https://img.shields.io/badge/tests-171%20verts-3ecf8e?style=flat-square)](tests)
+[![Démo publique](https://img.shields.io/badge/démo-publique-f5c518?style=flat-square)](https://gaiasg94.github.io/errata/)
+[![CI](https://img.shields.io/github/actions/workflow/status/GaiaSG94/errata/ci.yml?branch=main&label=ci&style=flat-square)](https://github.com/GaiaSG94/errata/actions/workflows/ci.yml)
+[![Tests](https://img.shields.io/badge/tests-201%20verts-3ecf8e?style=flat-square)](tests)
 [![Licence MIT](https://img.shields.io/badge/licence-MIT-9aa3b2?style=flat-square)](LICENSE)
 
 Projet soumis à **IceHacks 2026** (CodeStarters, Devpost).
 
 ## Essayer tout de suite
 
-**<https://tradoooo.github.io/rature/>** — public, HTTPS, sans compte, sans installation.
+**<https://gaiasg94.github.io/errata/>** — public, HTTPS, sans compte, sans installation.
 
 | Tu veux… | Fais |
 |---|---|
@@ -21,7 +21,10 @@ Projet soumis à **IceHacks 2026** (CodeStarters, Devpost).
 | Analyser sans dépendre du proxy partagé | Réglages → colle ta clé InferHub (BYOK) ; elle reste sur ton appareil |
 | Vérifier qu'aucune image n'est conservée | Ouvre l'onglet Réseau : l'image part en base64 dans la requête, rien n'est écrit, l'historique est en IndexedDB |
 
-Le proxy public tourne sur Modal (CPU uniquement, scale-to-zero) : `proxy/modal_app.py`.
+Le proxy public de ce dépôt est un **Cloudflare Worker** (`worker/worker.js`, chaîne de repli côté
+serveur + quota) : <https://errata-proxy.rature.workers.dev/analyze> — l'URL est injectée au build
+via la variable de dépôt `RATURE_PROXY_URL`. La variante Modal (CPU, scale-to-zero) reste disponible
+dans `proxy/modal_app.py`.
 
 ---
 
@@ -37,7 +40,7 @@ l'information : **la copie annotée**.
 
 ## La thèse
 
-On ne photographie pas l'énoncé, on photographie **la correction**. Raturé n'est pas un générateur
+On ne photographie pas l'énoncé, on photographie **la correction**. Errata n'est pas un générateur
 d'exercices : c'est un **profil d'erreur personnel** qui s'affine à chaque copie.
 
 - 1ʳᵉ copie → un diagnostic
@@ -173,7 +176,7 @@ Variables : voir [`.env.example`](.env.example).
 | RNF-04 | faux positifs sur copie propre | 0 toléré | test dédié : 0 appel, 0 faute |
 | RNF-05 | mobile (photo directe) | obligatoire | `capture="environment"`, cibles ≥ 48 px |
 | RNF-06 | accessibilité AA, clavier, ≥ 16 px | obligatoire | focus visible, `aria-live`, textes ≥ 16 px |
-| RNF-07 | bundle initial | < 300 Ko gzip | 112 Ko gzip |
+| RNF-07 | bundle initial | < 300 Ko gzip | 127 Ko gzip (JS + CSS) |
 | RNF-08 | disponibilité pendant le jugement | 24h/24 | GitHub Pages (statique, sans backend) |
 | RNF-09 | quota épuisé → message clair + BYOK | obligatoire | 429 traduit en français, champ BYOK |
 | RNF-10 | aucune dépendance payante | obligatoire | 0 $ |
@@ -186,9 +189,9 @@ L'historique local est exportable et supprimable en un clic (RNF-P4), et l'UI le
 
 ## CI et infrastructure
 
-CI en moins de 5 minutes sur quatre runners self-hosted **déplacés** depuis des dépôts qui ne s'en
-servaient plus ; trois checks requis (`ci`, `ci-budget`, `couche0`) ; merge par la file Mergify ;
-les conflits sont résolus par un agent branché sur InferHub. Détails :
+CI en moins de 5 minutes sur runners hébergés GitHub (`ubuntu-latest`) ; trois checks requis
+(`ci`, `ci-budget`, `couche0`) ; merge par la file Mergify. Historique : la CI tournait sur des
+runners self-hosted, absents de ce dépôt — retour aux runners hébergés le 14/11. Détails :
 [`docs/INFRA-CI.md`](docs/INFRA-CI.md).
 
 ## Déclaration des outils IA

@@ -191,10 +191,9 @@ body {
 }
 
 .errata-hero {
-  display: grid;
-  grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr);
-  align-items: center;
-  gap: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.6rem;
   min-height: calc(100dvh - 9rem);
   padding: 2rem 0 1.5rem;
 }
@@ -202,6 +201,10 @@ body {
 .errata-hero-copy {
   position: relative;
   z-index: 1;
+  width: 100%;
+  max-width: 42rem;
+  margin: 0 auto;
+  text-align: center;
 }
 
 .errata-hero-kicker {
@@ -253,7 +256,7 @@ body {
 
 .errata-hero-lede {
   max-width: 34rem;
-  margin: 1.25rem 0 0;
+  margin: 1.25rem auto 0;
   color: rgb(255 255 255 / 0.92);
   font-size: 1rem;
 }
@@ -262,6 +265,7 @@ body {
 .errata-proof-stickers {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 0.75rem;
 }
 
@@ -518,24 +522,7 @@ body {
 
 @media (max-width: 900px) {
   .errata-hero {
-    grid-template-columns: 1fr;
     min-height: auto;
-  }
-
-  .errata-hero-copy {
-    text-align: center;
-  }
-
-  .errata-eyebrow,
-  .errata-hero-kicker,
-  .errata-hero-actions,
-  .errata-proof-stickers {
-    justify-content: center;
-  }
-
-  .errata-hero-lede {
-    margin-right: auto;
-    margin-left: auto;
   }
 }
 

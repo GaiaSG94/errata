@@ -8,7 +8,7 @@ complète, sans zone grise.
 
 | Usage | Fournisseur | Où |
 |---|---|---|
-| Lecture des annotations manuscrites du professeur (vision) | InferHub, API [OI]-compatible, modèle multimodal `ag/gemini-3.8-flash-high` | `src/pipeline/extract.ts` |
+| Lecture des annotations manuscrites du professeur (vision) | InferHub, API [OI]-compatible, chaîne multimodale `ag/gemini-4-carbon` → `zai/glm-4.6v` | `src/pipeline/extract.ts` |
 | Classification dans la taxonomie fermée (12 types) | idem | `src/pipeline/classify.ts` |
 | Génération de l'exercice ciblé | idem | `src/pipeline/exercise.ts` |
 | Garde-fou de pertinence (second passage) | idem | `src/pipeline/exercise.ts` |
@@ -25,6 +25,8 @@ La clé d'API ne descend jamais dans le bundle : elle est portée par le proxy e
 | Outil | Usage |
 |---|---|
 | Agents de codage ZeroClaw (b, et sous-agents) | Écriture du code TypeScript/React, des tests, de la configuration CI, de la documentation |
+| Claude (session locale) | Système visuel « Stickers », mise en anglais du site, planches de design |
+| opencode (session locale) | Proxy edge Cloudflare Worker, écran d'accueil « parcours », déploiement Pages, relecture des docs |
 | Modèles via InferHub | Résolution automatique des conflits de rebase dans la file de merge (`.github/fireworks/conflict_agent.py`) |
 | Agent de périmètre CI | Rédaction du bloc `## Scope` des PR à partir du diff |
 
@@ -49,7 +51,7 @@ Ce qui n'est **pas** généré :
 
 L'auteur peut expliquer chaque ligne du dépôt, chaque étape du pipeline, chaque règle du profil et
 chaque prompt. Une démonstration complémentaire peut être faite en direct : le produit tourne en
-local (`npm ci && npm run dev`), les 170 tests s'exécutent sans réseau ni quota (`npm test`), et le
+local (`npm ci && npm run dev`), la suite hors ligne (187 tests) s'exécute sans réseau ni quota, et le
 corpus de démo permet de rejouer une analyse complète sans clé d'API.
 
 ## 5. Ce que le produit ne fait pas

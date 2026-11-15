@@ -1,15 +1,15 @@
-name: CI
+﻿name: CI
 
-# CI de Raturé : typecheck strict, tests (domaine, corpus, quota du proxy),
-# build de production et gardes de qualité (taille des fichiers/fonctions,
-# contrôles du socle). Verdict en quelques dizaines de secondes sur un runner
-# auto-hébergé du r630 ; budget dur de 5 minutes (règle user 2026-10-24).
+# CI de RaturÃ© : typecheck strict, tests (domaine, corpus, quota du proxy),
+# build de production et gardes de qualitÃ© (taille des fichiers/fonctions,
+# contrÃ´les du socle). Verdict en quelques dizaines de secondes sur un runner
+# auto-hÃ©bergÃ© du r630 ; budget dur de 5 minutes (rÃ¨gle user 2026-10-24).
 #
-# Le check publié s'appelle `ci` (nom du job) : il est exigé par le ruleset de
+# Le check publiÃ© s'appelle `ci` (nom du job) : il est exigÃ© par le ruleset de
 # `main`, par la file Mergify, avec `ci-budget` et `couche0`.
 on:
   pull_request:
-  # File de merge : même contrôle sur le commit temporaire du groupe.
+  # File de merge : mÃªme contrÃ´le sur le commit temporaire du groupe.
   merge_group:
   workflow_dispatch:
 
@@ -23,7 +23,7 @@ permissions:
 jobs:
   ci:
     name: ci
-    runs-on: [self-hosted, linux, x64, rature-worker]
+    runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
@@ -32,13 +32,13 @@ jobs:
           persist-credentials: false
           clean: false
 
-      # Runners auto-hébergés persistants : un sous-dossier parasite d'un run
-      # précédent peut survivre et fausser les tests. Nettoyage complet.
+      # Runners auto-hÃ©bergÃ©s persistants : un sous-dossier parasite d'un run
+      # prÃ©cÃ©dent peut survivre et fausser les tests. Nettoyage complet.
       - name: Nettoyage du workspace
         shell: bash
         run: git clean -ffdx
 
-      # Node n'est pas dans le PATH d'un shell non connecté sur le worker :
+      # Node n'est pas dans le PATH d'un shell non connectÃ© sur le worker :
       # `~/bin` porte `node`, `npm` et `gh`.
       - name: Outillage Node
         shell: bash
@@ -49,7 +49,7 @@ jobs:
           node --version
           npm --version
 
-      - name: Dépendances
+      - name: DÃ©pendances
         shell: bash
         run: npm ci --prefer-offline --no-audit --no-fund
 
@@ -57,7 +57,7 @@ jobs:
         shell: bash
         run: npm run typecheck
 
-      - name: Tests (logique pure, aucun réseau)
+      - name: Tests (logique pure, aucun rÃ©seau)
         shell: bash
         run: npm test
 
@@ -70,8 +70,8 @@ jobs:
         shell: bash
         run: node scripts/check-tokens.mjs
 
-      # Les gardes de la CI se testent elles-mêmes : couche0 + agents de
-      # conflit. stdlib Python, quelques secondes, aucun réseau.
+      # Les gardes de la CI se testent elles-mÃªmes : couche0 + agents de
+      # conflit. stdlib Python, quelques secondes, aucun rÃ©seau.
       - name: Tests des gardes CI (couche0, agents)
         shell: bash
         run: |

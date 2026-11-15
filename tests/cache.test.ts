@@ -91,6 +91,9 @@ describe('cache local des analyses (idée 4)', () => {
 
   it('le cache est plafonné : les plus anciennes entrées sautent', async () => {
     const reference = Date.parse('2026-11-12T12:00:00Z')
+    // Horloge figée juste après la plus récente écriture : sans elle, le test
+    // dépend de la date réelle et échoue dès que 24 h sont passées.
+    vi.useFakeTimers().setSystemTime(new Date(reference + (MAX_ENTREES_CACHE + 6) * 1000))
     for (let i = 0; i < MAX_ENTREES_CACHE + 5; i += 1) {
       const empreinte = `empreinte-${i}`
       await ecrireCache(empreinte, analyse(`d${i}`, new Date(reference + i * 1000).toISOString()))

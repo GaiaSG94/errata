@@ -2,7 +2,7 @@
 
 ## Nom du projet
 
-Raturé
+Errata
 
 ## Tagline (≤ 60 caractères)
 
@@ -94,8 +94,9 @@ type d'erreur au fil des copies.
 
 ## Liens
 
-- Démo : https://tradoooo.github.io/rature/
-- Code : https://github.com/Tradoooo/rature
+- Démo : https://gaiasg94.github.io/errata/
+- Code : https://github.com/GaiaSG94/errata
+- Proxy edge : https://errata-proxy.rature.workers.dev/health
 - Vidéo : _(à coller, lien public vérifié en navigation privée)_
 
 ## Équipe

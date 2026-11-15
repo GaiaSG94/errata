@@ -1,10 +1,10 @@
-name: ci-budget (≤ 5 min)
+﻿name: ci-budget (â‰¤ 5 min)
 
-# Règle user 2026-10-24 : toute CI rend son verdict en 5 min au plus.
+# RÃ¨gle user 2026-10-24 : toute CI rend son verdict en 5 min au plus.
 # Ce workflow est un garde-fou de configuration, pas un test applicatif :
-# il échoue si un job déclare plus de 5 minutes (ou aucun timeout).
+# il Ã©choue si un job dÃ©clare plus de 5 minutes (ou aucun timeout).
 # Il tourne sur chaque PR pour que le check `ci-budget` existe toujours
-# (condition de file Mergify) — coût : quelques secondes.
+# (condition de file Mergify) â€” coÃ»t : quelques secondes.
 
 on:
   pull_request:
@@ -22,7 +22,7 @@ concurrency:
 jobs:
   ci-budget:
     name: ci-budget
-    runs-on: [self-hosted, rature-worker]
+    runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
       - name: Checkout (superficiel)
@@ -30,5 +30,5 @@ jobs:
         with:
           fetch-depth: 1
           persist-credentials: false
-      - name: Vérifier le budget de 5 min par job
+      - name: VÃ©rifier le budget de 5 min par job
         run: python3 .github/ci-budget/check_timeouts.py

@@ -1,9 +1,9 @@
-name: stale-base-guard (informatif)
+﻿name: stale-base-guard (informatif)
 
-# [HERMES-REFRESH] Portage du stale-base-guard du dépôt duello.
+# [HERMES-REFRESH] Portage du stale-base-guard du dÃ©pÃ´t duello.
 # Un retard sur main est INFORMATIF : warning + exit 0. Le gate
-# (hermes-lite.yml) rafraîchit la branche par l'API au moment du merge.
-# Si le dépôt met ce check en « requis » dans la protection de branche,
+# (hermes-lite.yml) rafraÃ®chit la branche par l'API au moment du merge.
+# Si le dÃ©pÃ´t met ce check en Â« requis Â» dans la protection de branche,
 # il reste vert sur un simple retard : seul un vrai conflit bloque.
 
 on:
@@ -12,7 +12,7 @@ on:
   workflow_dispatch:
     inputs:
       pr_number:
-        description: 'Numéro de PR'
+        description: 'NumÃ©ro de PR'
         required: true
 
 permissions:
@@ -26,7 +26,7 @@ concurrency:
 jobs:
   guard:
     name: stale-base-guard
-    runs-on: [self-hosted, rature-worker]
+    runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
       - name: Mesurer le retard sur la base
@@ -47,6 +47,6 @@ jobs:
             | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('behind_by', 0))")
           echo "behind=${BEHIND} base=${BASE}" >> "$GITHUB_OUTPUT" || true
           if [ "$BEHIND" -gt 0 ]; then
-            echo "::warning::La branche est en retard de ${BEHIND} commit(s) sur ${BASE} (information : hermes-lite la rafraîchit automatiquement au moment du merge)."
+            echo "::warning::La branche est en retard de ${BEHIND} commit(s) sur ${BASE} (information : hermes-lite la rafraÃ®chit automatiquement au moment du merge)."
           fi
           exit 0
