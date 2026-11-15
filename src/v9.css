@@ -247,8 +247,9 @@
 
 .errata-tel-appareil {
   position: relative;
-  width: 14rem;
-  height: 24rem;
+  /* doit tenir dans la scène du bloc (26rem − onglets − marges ≈ 21,5rem) */
+  width: 12.5rem;
+  height: 19rem;
   margin: 0 auto;
   overflow: hidden;
   padding: 0.85rem 0.75rem;
