@@ -10,6 +10,7 @@ import { Reglages } from './screens/Reglages'
 import { Entete } from './components/Entete'
 import { useRature } from '../etat/useRature'
 import type { Ecran } from '../etat/useRature'
+import { useEffect } from 'react'
 import type { JSX } from 'react'
 
 const ECRANS: Record<Ecran, () => JSX.Element> = {
@@ -24,6 +25,41 @@ const ECRANS: Record<Ecran, () => JSX.Element> = {
   apropos: CommentCaMarche,
 }
 
+/**
+ * La trame de points réagit au pointeur : deux calques se décalent en sens
+ * opposés (parallaxe). L'amortissement (0,08) rend le suivi mou, jamais
+ * saccadé ; le mouvement est coupé si l'utilisateur demande moins de motion.
+ */
+function useParallaxeTrame() {
+  useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    let x = window.innerWidth / 2
+    let y = window.innerHeight / 2
+    let cibleX = x
+    let cibleY = y
+    let raf = 0
+    const bouge = () => {
+      x += (cibleX - x) * 0.08
+      y += (cibleY - y) * 0.08
+      const racine = document.documentElement.style
+      racine.setProperty('--px', `${((x / window.innerWidth - 0.5) * -30).toFixed(1)}px`)
+      racine.setProperty('--py', `${((y / window.innerHeight - 0.5) * -22).toFixed(1)}px`)
+      const reste = Math.abs(cibleX - x) > 0.5 || Math.abs(cibleY - y) > 0.5
+      raf = reste ? requestAnimationFrame(bouge) : 0
+    }
+    const surMouvement = (evenement: PointerEvent) => {
+      cibleX = evenement.clientX
+      cibleY = evenement.clientY
+      if (!raf) raf = requestAnimationFrame(bouge)
+    }
+    window.addEventListener('pointermove', surMouvement, { passive: true })
+    return () => {
+      window.removeEventListener('pointermove', surMouvement)
+      if (raf) cancelAnimationFrame(raf)
+    }
+  }, [])
+}
+
 /** Routeur maison : un état, huit écrans, aucune dépendance externe. */
 const ETIQUETTES_SANTE = {
   ok: 'model online',
@@ -33,6 +69,7 @@ const ETIQUETTES_SANTE = {
 
 export function Application() {
   const { ecran, santeProxy } = useRature()
+  useParallaxeTrame()
   const EcranActif = ECRANS[ecran]
   return (
     <div className="relative z-10 mx-auto flex min-h-dvh w-full max-w-[1500px] flex-col px-4 py-5 sm:px-7 lg:px-10">
