@@ -44,6 +44,16 @@ describe('mode démonstration', () => {
 
     const brut = parserAnalyse(await client({ system: PROMPT_ANALYSE, user: 'x' }))
     const { extraction, erreurs } = decouperAnalyse(brut)
+
+    // Une copie « propre » enregistrée : le diagnostic attendu est l'absence
+    // de faute (RNF-04), et le pipeline s'arrête avant classification et
+    // exercice — il n'y a rien à rejouer ensuite.
+    if (meta!.dominant === 'propre') {
+      expect(extraction.copiePropre).toBe(true)
+      expect(erreurs).toHaveLength(0)
+      return
+    }
+
     expect(extraction.copiePropre).toBe(false)
     expect(erreurs.length).toBeGreaterThanOrEqual(1)
 

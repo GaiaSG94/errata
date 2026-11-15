@@ -40,7 +40,15 @@ const transport: Transport = { proxy: `${AMONT}/chat/completions` }
  * « photos » de l'élève), et chacune donne un fichier de réponses de même nom.
  */
 const DOSSIER_DEMO = '../../corpus/demo'
-const COPIES_DEMO = ['copie-demo-1.jpg', 'copie-demo-2.jpg', 'copie-demo-3.jpg']
+/** Toutes les copies photo de la démo (cf. corpus/copies-demo.json). */
+const COPIES_DEMO = [
+  'copie-demo-1.jpg',
+  'copie-demo-2.jpg',
+  'copie-demo-3.jpg',
+  'copie-demo-4.jpg',
+  'copie-demo-5.jpg',
+  'copie-demo-6.jpg',
+]
 
 async function appeler(requete: RequeteLLM, modele: string): Promise<string> {
   const reponse = await fetch(`${AMONT}/chat/completions`, {
@@ -107,19 +115,24 @@ async function enregistrer(nom: string) {
     revoirFautesPeuSures(erreurs, transport, clientEnregistreur(brut, 'revue')),
   )
   const diagnostic = construireDiagnostic(revue.erreurs, { id: nom, createdAt: new Date().toISOString() })
-  expect(diagnostic.typeDominant, `${nom} : aucun type dominant`).toBeTruthy()
+  // Une copie sans faute n'a pas de type dominant : c'est un résultat
+  // attendu (« aucune erreur détectée »), pas un échec d'enregistrement.
+  const propre = extraction.copiePropre
+  if (!propre) expect(diagnostic.typeDominant, `${nom} : aucun type dominant`).toBeTruthy()
 
-  await chrono('genere', () =>
-    genererExerciceVerifie({
-      typeDominant: diagnostic.typeDominant!,
-      extraitCopie: extraction.annotations.map((a) => a.ligne).slice(0, 6).join('\n'),
-      transport,
-      client: async (requete: RequeteLLM) => {
-        const cle = requete.system.includes('Garde-fou') ? 'verdict' : 'exercice'
-        return clientEnregistreur(brut, cle)(requete)
-      },
-    }),
-  )
+  if (!propre) {
+    await chrono('genere', () =>
+      genererExerciceVerifie({
+        typeDominant: diagnostic.typeDominant!,
+        extraitCopie: extraction.annotations.map((a) => a.ligne).slice(0, 6).join('\n'),
+        transport,
+        client: async (requete: RequeteLLM) => {
+          const cle = requete.system.includes('Garde-fou') ? 'verdict' : 'exercice'
+          return clientEnregistreur(brut, cle)(requete)
+        },
+      }),
+    )
+  }
 
   mkdirSync(fileURLToPath(new URL('../../corpus/reponses/', import.meta.url)), { recursive: true })
   writeFileSync(
@@ -129,8 +142,8 @@ async function enregistrer(nom: string) {
         source: `corpus/demo/${nom}`,
         modele: MODELE_PAR_DEFAUT,
         enregistreLe: new Date().toISOString(),
-        dominant: diagnostic.typeDominant,
-        nbFautes: diagnostic.nbFautes,
+        dominant: propre ? 'propre' : diagnostic.typeDominant,
+        nbFautes: propre ? 0 : diagnostic.nbFautes,
         revues: revue.revues,
         durees,
         reponses: Object.fromEntries(Object.entries(brut).map(([cle, liste]) => [cle, liste[0]])),
@@ -139,7 +152,7 @@ async function enregistrer(nom: string) {
       2,
     )}\n`,
   )
-  return { nom, dominant: diagnostic.typeDominant, revues: revue.revues }
+  return { nom, dominant: propre ? 'propre' : diagnostic.typeDominant, revues: revue.revues }
 }
 
 describe.skipIf(!CLE)('enregistrement du corpus de démo', () => {
@@ -149,8 +162,17 @@ describe.skipIf(!CLE)('enregistrement du corpus de démo', () => {
       async () => {
         const resultat = await enregistrer(nom)
         console.info(`[démo] ${resultat.nom} → dominant ${resultat.dominant}, revues ${resultat.revues}`)
-        const contenu = JSON.parse(readFileSync(cheminSortie(nom), 'utf8')) as { reponses: Record<string, string> }
+        const contenu = JSON.parse(readFileSync(cheminSortie(nom), 'utf8')) as {
+          dominant: string
+          reponses: Record<string, string>
+        }
         expect(contenu.reponses.analyse).toBeTruthy()
+        // Une copie propre n'a ni exercice ni verdict : le pipeline s'arrête
+        // avant, et c'est le résultat attendu (« aucune erreur détectée »).
+        if (contenu.dominant === 'propre') {
+          expect(contenu.reponses.exercice).toBeUndefined()
+          return
+        }
         expect(contenu.reponses.exercice).toBeTruthy()
         expect(contenu.reponses.verdict).toBeTruthy()
       },

@@ -1,7 +1,7 @@
 import { Bouton } from '../components/Bouton'
 import { BandeauSante } from '../components/BandeauSante'
 import { Carte } from '../components/Carte'
-import { COPIES_DEMO, ID_COPIES_DEMO } from '../../pipeline/demo'
+import { COPIES_DEMO, COPIES_ECHANTILLON, ID_COPIES_DEMO } from '../../pipeline/demo'
 import { useRature } from '../../etat/useRature'
 
 const STEPS = [
@@ -49,6 +49,46 @@ function DrillCard() {
   )
 }
 
+/**
+ * Galerie « Tester » : le jury choisit une copie photo et l'application
+ * l'analyse pour de vrai. Les copies dont les réponses du modèle sont
+ * enregistrées se rejouent hors ligne ; les autres passent par le proxy.
+ */
+function GalerieEchantillons() {
+  const { analyserEchantillon, occupe } = useRature()
+  return (
+    <section className="errata-test" id="tester">
+      <div className="errata-test-head">
+        <span>Sample papers · written for this demo</span>
+        <span>Pick one → the app analyses it, exactly like a photo</span>
+      </div>
+      <div className="errata-test-row">
+        {COPIES_ECHANTILLON.map((echantillon) => (
+          <button
+            key={echantillon.id}
+            type="button"
+            className="errata-test-card"
+            onClick={() => void analyserEchantillon(echantillon.id)}
+            disabled={occupe}
+          >
+            <img src={echantillon.image} alt={`${echantillon.titre} — ${echantillon.eleve}`} loading="lazy" />
+            <span className="meta">
+              <span className="who">{echantillon.eleve}</span>
+              <span className="sub">
+                {echantillon.devoir} · {echantillon.note}
+              </span>
+              <span className="tag-line">{echantillon.resume}</span>
+              <span className={echantillon.enregistrement ? 'go' : 'go live'}>
+                {echantillon.enregistrement ? 'Tester · offline replay' : 'Tester · live model'}
+              </span>
+            </span>
+          </button>
+        ))}
+      </div>
+    </section>
+  )
+}
+
 export function Accueil() {
   const { aller, profil, analyserDemo, occupe } = useRature()
   const plusieurs = ID_COPIES_DEMO.length > 1
@@ -65,7 +105,12 @@ export function Accueil() {
           </p>
           <div className="errata-hero-actions">
             <Bouton onClick={() => aller('cadrage')}>Photograph my paper</Bouton>
-            <Bouton variante="secondaire" onClick={() => void analyserDemo()} disabled={occupe}>Try the demo <span>↗</span></Bouton>
+            <Bouton
+              variante="secondaire"
+              onClick={() => document.getElementById('tester')?.scrollIntoView({ behavior: 'smooth' })}
+            >
+              Try a sample paper <span>↓</span>
+            </Bouton>
           </div>
           <div className="errata-proof-stickers" aria-hidden="true">
             <span className="sticker sticker-rose">No grades. Ever.</span>
@@ -93,6 +138,7 @@ export function Accueil() {
       </section>
 
       <div className="errata-home-lower">
+        <GalerieEchantillons />
         <BandeauSante />
         <div className="flex flex-wrap items-center justify-between gap-3">
           <p className="text-sm text-white/90">No paper is ever stored. Your history stays on your device.</p>

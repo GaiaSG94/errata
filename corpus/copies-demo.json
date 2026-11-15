@@ -8,6 +8,7 @@
       "titre": "Exercice 1 : développer et réduire",
       "note": "11/20",
       "types_attendus": ["E01", "E11"],
+      "resume": "le signe se perd au développement",
       "lignes": [
         { "type": "enonce", "texte": "A = -2(3x - 5)" },
         { "type": "eleve", "texte": "A = -6x - 10" },
@@ -28,6 +29,7 @@
       "titre": "Exercice 2 : développer et réduire",
       "note": "13/20",
       "types_attendus": ["E01", "E02"],
+      "resume": "le signe revient, avec une distributivité incomplète",
       "lignes": [
         { "type": "enonce", "texte": "D = 5 - 3(2x - 1)" },
         { "type": "eleve", "texte": "D = 5 - 6x - 3" },
@@ -48,6 +50,7 @@
       "titre": "Exercice 3 : puissances et racines",
       "note": "15/20",
       "types_attendus": ["E06", "E07"],
+      "resume": "puissances et racines : autre famille de fautes",
       "lignes": [
         { "type": "enonce", "texte": "G = (2x)³" },
         { "type": "eleve", "texte": "G = 2x³" },
@@ -61,6 +64,75 @@
         { "type": "enonce", "texte": "J = √50" },
         { "type": "eleve", "texte": "J = 25√2" },
         { "type": "corrige", "texte": "J = 5√2", "prof": "la racine de 25" }
+      ]
+    },
+    {
+      "id": "copie-demo-4",
+      "eleve": "Léa M.",
+      "classe": "2nde 4",
+      "devoir": "Contrôle n°1",
+      "titre": "Contrôle : développement et équations",
+      "note": "18/20",
+      "types_attendus": [],
+      "resume": "contrôle sans faute : « aucune erreur détectée »",
+      "lignes": [
+        { "type": "enonce", "texte": "A = -3(x - 4)" },
+        { "type": "eleve", "texte": "A = -3x + 12" },
+        { "type": "enonce", "texte": "B = (x + 2)²" },
+        { "type": "eleve", "texte": "B = x² + 4x + 4" },
+        { "type": "enonce", "texte": "C = 5(2x - 1)" },
+        { "type": "eleve", "texte": "C = 10x - 5" },
+        { "type": "enonce", "texte": "D : 2x + 5 = 3x - 4" },
+        { "type": "eleve", "texte": "D : x = 9" },
+        { "type": "annotation", "texte": "Très bon travail !" }
+      ]
+    },
+    {
+      "id": "copie-demo-5",
+      "eleve": "Noé B.",
+      "classe": "2nde 4",
+      "devoir": "Devoir n°3",
+      "titre": "Développement et fractions",
+      "note": "9/20",
+      "types_attendus": ["E03", "E04"],
+      "resume": "identités remarquables et fractions",
+      "lignes": [
+        { "type": "enonce", "texte": "A = (a + b)²" },
+        { "type": "eleve", "texte": "A = a² + b²" },
+        { "type": "corrige", "texte": "A = a² + 2ab + b²", "prof": "il manque 2ab" },
+        { "type": "enonce", "texte": "B = (x - 3)²" },
+        { "type": "eleve", "texte": "B = x² + 9" },
+        { "type": "corrige", "texte": "B = x² - 6x + 9", "prof": "- 6x" },
+        { "type": "enonce", "texte": "C = 3/4 + 1/6" },
+        { "type": "eleve", "texte": "C = 4/10" },
+        { "type": "corrige", "texte": "C = 9/12 + 2/12 = 11/12", "prof": "même dénominateur" },
+        { "type": "enonce", "texte": "D = (2x)²" },
+        { "type": "eleve", "texte": "D = 4x" },
+        { "type": "corrige", "texte": "D = 4x²", "prof": "le x² aussi" }
+      ]
+    },
+    {
+      "id": "copie-demo-6",
+      "eleve": "Inès D.",
+      "classe": "2nde 4",
+      "devoir": "Devoir n°2",
+      "titre": "Calculs décimaux et grandeurs",
+      "note": "12/20",
+      "types_attendus": ["E09", "E10", "E02"],
+      "resume": "arrondi, unités et distributivité",
+      "lignes": [
+        { "type": "enonce", "texte": "A = 12,5 × 4" },
+        { "type": "eleve", "texte": "A = 49" },
+        { "type": "corrige", "texte": "A = 50", "prof": "arrondi au dizième" },
+        { "type": "enonce", "texte": "B = 3,2 m + 45 cm" },
+        { "type": "eleve", "texte": "B = 3,2 m + 45 m" },
+        { "type": "corrige", "texte": "B = 3,65 m", "prof": "unités !" },
+        { "type": "enonce", "texte": "C = 2(x + 3)" },
+        { "type": "eleve", "texte": "C = 2x + 3" },
+        { "type": "corrige", "texte": "C = 2x + 6", "prof": "le 3 aussi" },
+        { "type": "enonce", "texte": "D = 7,8 × 100" },
+        { "type": "eleve", "texte": "D = 780" },
+        { "type": "annotation", "texte": "ok pour celle-là" }
       ]
     }
   ]

@@ -6,7 +6,7 @@
 import type { Dispatch, SetStateAction } from 'react'
 import { useCallback } from 'react'
 import type { Diagnostic, ResultatAnalyse } from '../domain/types'
-import { clientDemoPour, fichierDemoPour } from '../pipeline/demo'
+import { clientDemoPour, echantillonDe, fichierEchantillon, fichierDemoPour } from '../pipeline/demo'
 import { ID_COPIES_DEMO } from '../pipeline/demo'
 import { obtenirExercice } from '../pipeline/exercise'
 import { analyserCopie } from '../pipeline/orchestrate'
@@ -127,6 +127,24 @@ export function useActionsRature({ etat, setEtat, aller }: Ctx) {
   )
 
   /**
+   * Un échantillon joué par le jury : une photo de copie réelle. Si les
+   * réponses du modèle sont enregistrées sur CETTE photo, on rejoue hors
+   * ligne ; sinon l'analyse part en ligne vers le proxy edge.
+   */
+  const analyserEchantillon = useCallback(
+    async (id: string) => {
+      const echantillon = echantillonDe(id)
+      if (!echantillon) {
+        setEtat((precedent) => ({ ...precedent, erreur: `Sample paper not found: ${id}` }))
+        return
+      }
+      const demoId = echantillon.enregistrement ? id : undefined
+      await analyser(await fichierEchantillon(id), demoId ? { demoId } : {})
+    },
+    [analyser, setEtat],
+  )
+
+  /**
    * Mode prof : les copies analysées ici ne rejoignent PAS l'historique
    * personnel — le profil d'un élève et la statistique d'une classe ne se
    * mélangent pas.
@@ -224,6 +242,7 @@ export function useActionsRature({ etat, setEtat, aller }: Ctx) {
   return {
     analyser,
     analyserDemo,
+    analyserEchantillon,
     analyserLot,
     analyserLotDemo,
     enregistrerReglages,

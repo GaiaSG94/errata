@@ -525,6 +525,111 @@ body::after {
   background: var(--color-surface);
 }
 
+/* ---------- Galerie « Tester » (copies d'échantillon) ---------- */
+
+.errata-test {
+  margin-top: 0.5rem;
+}
+
+.errata-test-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  margin-bottom: 0.75rem;
+  color: white;
+  font-family: var(--font-etroite);
+  font-weight: 700;
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.errata-test-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(158px, 1fr));
+  gap: 0.8rem;
+}
+
+.errata-test-card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0;
+  border: 3px solid var(--color-texte);
+  border-radius: 0.85rem;
+  background: var(--color-surface);
+  box-shadow: 5px 5px 0 var(--color-texte);
+  text-align: left;
+  cursor: pointer;
+  transition: transform 200ms var(--sp), box-shadow 200ms var(--sp);
+}
+
+.errata-test-card:hover:not(:disabled) {
+  transform: translate(-2px, -2px);
+  box-shadow: 8px 8px 0 var(--color-texte);
+}
+
+.errata-test-card:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+.errata-test-card img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1240 / 1754;
+  object-fit: cover;
+  object-position: top;
+  border-bottom: 3px solid var(--color-texte);
+}
+
+.errata-test-card .meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.6rem 0.65rem 0.7rem;
+}
+
+.errata-test-card .who {
+  font-weight: 800;
+  font-size: 0.8rem;
+  letter-spacing: -0.01em;
+}
+
+.errata-test-card .sub {
+  color: var(--color-muet);
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.errata-test-card .tag-line {
+  color: var(--color-jaune);
+  font-size: 0.68rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.errata-test-card .go,
+.errata-test-card .go.live {
+  align-self: flex-start;
+  margin-top: 0.35rem;
+  padding: 0.25rem 0.45rem;
+  border: 2px solid var(--color-texte);
+  border-radius: 0.4rem;
+  background: var(--color-menthe);
+  box-shadow: 2px 2px 0 var(--color-texte);
+  font-family: var(--font-etroite);
+  font-weight: 700;
+  font-size: 0.62rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.errata-test-card .go.live {
+  background: var(--color-ambre);
+}
+
 /* Écrans internes : une feuille de papier posée sur le bureau bleu. L'accueil
    reste à même le bureau (son .errata-home est exclu). */
 main.errata-zone > :not(.errata-home) {

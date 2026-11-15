@@ -21,6 +21,7 @@ pas la lecture d'une écriture réelle (protocole dans corpus/README.md).
 
 import argparse
 import json
+import os
 import pathlib
 import random
 import shutil
@@ -219,10 +220,16 @@ def main():
     ap.add_argument("--police", default="/tmp/Caveat.ttf")
     ap.add_argument("--demo", action="store_true", help="génère les photos de la démo (corpus/demo)")
     ap.add_argument("--source-demo", default="corpus/copies-demo.json")
+    ap.add_argument(
+        "--uniquement",
+        default="",
+        help="ids séparés par des virgules : ne régénère que ces copies de démo",
+    )
     args = ap.parse_args()
 
     if args.demo:
-        generer_demo(source=args.source_demo, sortie="corpus/demo")
+        ids = [i.strip() for i in args.uniquement.split(",") if i.strip()]
+        generer_demo(source=args.source_demo, sortie="corpus/demo", uniquement=ids)
         return
 
     sortie = pathlib.Path(args.sortie)
@@ -252,8 +259,10 @@ def main():
 # Démo : copies d'un même élève, rendues puis « photographiées »
 # ---------------------------------------------------------------------------
 
-POLICE_MANUSCRITE = "/tmp/Caveat.ttf"
-POLICE_IMPRIME = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
+POLICE_MANUSCRITE = os.environ.get("ERRATA_POLICE_MANUSCRITE", "/tmp/Caveat.ttf")
+POLICE_IMPRIME = os.environ.get(
+    "ERRATA_POLICE_IMPRIME", "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
+)
 
 
 def _police_manuscrite(taille):
@@ -285,7 +294,7 @@ def _rendre_copie(copie, dossier_sortie):
     dessin.text((180, y), copie["titre"], font=imprime, fill=(40, 40, 40))
     y += 70
 
-    alea = random.Random(hash(copie["id"]) & 0xFFFF)
+    alea = random.Random(copie["id"])
     index = 0
     for ligne in copie["lignes"]:
         genre = ligne["type"]
@@ -417,12 +426,22 @@ def _photographier(page, graine):
     return image
 
 
-def generer_demo(source="corpus/copies-demo.json", sortie="corpus/demo"):
-    """Rend les copies de la démo et les « photographie » (JPEG, comme un téléphone)."""
+def generer_demo(
+    source="corpus/copies-demo.json", sortie="corpus/demo", uniquement=None
+):
+    """Rend les copies de la démo et les « photographie » (JPEG, comme un téléphone).
+
+    `uniquement` liste des ids : ne rend que ceux-là. Utile pour ajouter des
+    copies sans toucher aux photos déjà **enregistrées** dans corpus/reponses —
+    les réponses de la démo sont capturées sur des photos précises, régénérer
+    une photo modifie son grain et rend l'enregistrement périmé.
+    """
     donnees = json.loads(pathlib.Path(source).read_text(encoding="utf-8"))
     dossier = pathlib.Path(sortie)
     dossier.mkdir(parents=True, exist_ok=True)
     for index, copie in enumerate(donnees["copies"]):
+        if uniquement and copie["id"] not in uniquement:
+            continue
         page = _rendre_copie(copie, dossier)
         photo = _photographier(page, 1000 + index)
         chemin = dossier / ("%s.jpg" % copie["id"])

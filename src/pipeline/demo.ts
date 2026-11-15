@@ -18,6 +18,7 @@ import { libelleDe } from '../domain/taxonomy'
 import type { CodeErreur } from '../domain/taxonomy'
 import type { ClientBrut } from './client'
 import type { RequeteLLM } from './llm'
+import descriptionDemo from '../../corpus/copies-demo.json'
 
 export type EtapeDemo = 'analyse' | 'revue' | 'exercice' | 'verdict'
 
@@ -42,6 +43,25 @@ export type CopieDemo = {
 }
 
 /**
+ * Un échantillon : une copie photo que le jury peut tester. Elle n'a pas
+ * forcément de réponses enregistrées — sans elles, l'analyse passe par le
+ * modèle en ligne (le proxy edge), avec elles elle rejoue hors ligne.
+ */
+export type Echantillon = {
+  id: string
+  image: string
+  eleve: string
+  classe: string
+  devoir: string
+  titre: string
+  resume: string
+  note: string
+  typesAttendus: string[]
+  /** Réponses enregistrées sur CETTE photo : absent = analyse en ligne. */
+  enregistrement: Enregistrement | null
+}
+
+/**
  * `eager` + `import: 'default'` : sans l'option `import`, Vite rend le MODULE
  * (objet) et non la valeur — en dev, `fetch(module)` lève « Cannot convert
  * object to primitive value ». Bug payé le 12/11.
@@ -52,37 +72,58 @@ const REPONSES = import.meta.glob<Enregistrement>('../../corpus/reponses/*.json'
 })
 const IMAGES = import.meta.glob<string>('../../corpus/demo/*.{png,jpg}', { eager: true, import: 'default' })
 
-function idDepuisChemin(chemin: string): string {
-  const base = chemin.slice(chemin.lastIndexOf('/') + 1)
-  return base.slice(0, base.lastIndexOf('.'))
-}
-
 /** Titre lisible : le type dominant, et le nombre de fautes quand il est connu. */
 function titreCopie(id: string, enregistrement: Enregistrement): string {
   const libelle = libelleDe(enregistrement.dominant as CodeErreur)
   const fautes = enregistrement.nbFautes
+  if (enregistrement.dominant === 'propre') return `${id} — aucune erreur détectée`
   return fautes === undefined ? `${id} — ${libelle}` : `${libelle} — ${fautes} mistake(s)`
 }
 
-function construireCopies(): CopieDemo[] {
-  const copies: CopieDemo[] = []
-  for (const [chemin, enregistrementBrut] of Object.entries(REPONSES)) {
-    const id = idDepuisChemin(chemin)
-    const image = Object.entries(IMAGES).find(([cle]) => idDepuisChemin(cle) === id)?.[1]
+/**
+ * Les échantillons : toutes les copies décrites dans `corpus/copies-demo.json`
+ * pour lesquelles une photo existe. C'est la source de vérité unique — la même
+ * que celle qui a produit les photos et les réponses enregistrées.
+ */
+function construireEchantillons(): Echantillon[] {
+  const echantillons: Echantillon[] = []
+  for (const copie of descriptionDemo.copies) {
+    const image = IMAGES[`../../corpus/demo/${copie.id}.jpg`] ?? IMAGES[`../../corpus/demo/${copie.id}.png`]
     if (!image) continue
-    const enregistrement = enregistrementBrut
-    copies.push({
-      id,
-      titre: titreCopie(id, enregistrement),
+    echantillons.push({
+      id: copie.id,
       image,
-      enregistrement,
+      eleve: copie.eleve,
+      classe: copie.classe,
+      devoir: copie.devoir,
+      titre: copie.titre,
+      resume: copie.resume ?? '',
+      note: copie.note ?? '',
+      typesAttendus: copie.types_attendus ?? [],
+      enregistrement: REPONSES[`../../corpus/reponses/${copie.id}.json`] ?? null,
     })
   }
-  // Ordre stable : le rejeu d'une « démonstration complète » doit être reproductible.
-  return copies.sort((a, b) => a.id.localeCompare(b.id))
+  return echantillons
 }
 
-export const COPIES_DEMO: CopieDemo[] = construireCopies()
+export const COPIES_ECHANTILLON: Echantillon[] = construireEchantillons()
+
+/** Un échantillon par son identifiant. */
+export function echantillonDe(id: string): Echantillon | undefined {
+  return COPIES_ECHANTILLON.find((e) => e.id === id)
+}
+
+function estEnregistre(e: Echantillon): e is Echantillon & { enregistrement: Enregistrement } {
+  return e.enregistrement !== null
+}
+
+/** Les copies **rejouables** hors ligne : celles dont les réponses sont capturées. */
+export const COPIES_DEMO: CopieDemo[] = COPIES_ECHANTILLON.filter(estEnregistre).map((e) => ({
+  id: e.id,
+  titre: titreCopie(e.id, e.enregistrement),
+  image: e.image,
+  enregistrement: e.enregistrement,
+}))
 
 export const ID_COPIES_DEMO = COPIES_DEMO.map((copie) => copie.id)
 
@@ -164,6 +205,19 @@ export async function fichierDemoPour(id?: string): Promise<File> {
   const reponse = await fetch(copie.image)
   const blob = await reponse.blob()
   return new File([blob], `${copie.id}.png`, { type: blob.type || 'image/png' })
+}
+
+/**
+ * Un échantillon, en `File` — enregistré ou non. Le jury teste ainsi une
+ * vraie photo : le pipeline la traite exactement comme une photo prise au
+ * téléphone.
+ */
+export async function fichierEchantillon(id: string): Promise<File> {
+  const echantillon = echantillonDe(id)
+  if (!echantillon) throw new Error(`Sample paper not found: ${id}`)
+  const reponse = await fetch(echantillon.image)
+  const blob = await reponse.blob()
+  return new File([blob], `${echantillon.id}.jpg`, { type: blob.type || 'image/jpeg' })
 }
 
 export async function fichierDemo(): Promise<File> {
