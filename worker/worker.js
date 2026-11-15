@@ -107,14 +107,21 @@ function chainePour(demande) {
   return [demande, ...CHAINE.filter((m) => m !== demande)]
 }
 
-/** Un appel à l'amont : JSON en entrée, `{texte}` en sortie, jamais de fuite. */
+/** Un appel à l'amont : JSON en entrée, `{statut, texte|erreur}` en sortie. Sur
+ *  429 (« retry shortly »), une seule pause de 3 s avant de rendre la main. */
 async function appelerAmont(charge, modele, cle) {
-  const reponse = await fetch(`${AMONT}/chat/completions`, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json', authorization: `Bearer ${cle}` },
-    body: JSON.stringify({ ...charge, model: modele }),
-    signal: AbortSignal.timeout(DELAI_AMONT_MS),
-  })
+  const tenter = () =>
+    fetch(`${AMONT}/chat/completions`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', authorization: `Bearer ${cle}` },
+      body: JSON.stringify({ ...charge, model: modele }),
+      signal: AbortSignal.timeout(DELAI_AMONT_MS),
+    })
+  let reponse = await tenter()
+  if (reponse.status === 429) {
+    await new Promise((resoudre) => setTimeout(resoudre, 3000))
+    reponse = await tenter()
+  }
   const data = await reponse.json()
   if (reponse.status === 200) {
     const texte = data?.choices?.[0]?.message?.content || ''
@@ -143,7 +150,7 @@ async function relayer(charge, cle, maintenant) {
     }
     if (resultat.statut === 200) {
       signaler(modele, maintenant, false)
-      return { texte: resultat.texte, modele, tentatives }
+      return { statut: 200, texte: resultat.texte, modele, tentatives }
     }
     signaler(modele, maintenant, REESSAYABLES.has(resultat.statut))
     dernierStatut = resultat.statut
