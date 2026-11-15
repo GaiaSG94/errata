@@ -18,6 +18,8 @@ import { amontMort, fusionner, messageErreur, transportDe } from './useEtatRatur
 import type { Reglages } from '../domain/types'
 
 const ATTENTE_DEMO_GUIDEE_MS = 850
+/** Délai max d'une analyse avant de rendre la main avec un message honnête. */
+const DELAI_ANALYSE_MAX_MS = 150_000
 
 export type { Reglages }
 
@@ -92,9 +94,17 @@ export function useActionsRature({ etat, setEtat, aller }: Ctx) {
         erreur: null,
         progression: [],
         demoId: null,
+        dernierFichier: fichier,
       }))
       const demoId = options.demoId ?? null
-      const resultat = await analyserCopie(fichier, {
+      // Délai max, honnête : au-delà, on rend la main avec un message clair au
+      // lieu de laisser l'écran bloqué sur une étape « en cours » pendant
+      // plusieurs minutes (bug du 15/11 devant un juge).
+      let vidange: ReturnType<typeof setTimeout> | undefined
+      const delaiMax = new Promise<null>((resoudre) => {
+        vidange = setTimeout(() => resoudre(null), DELAI_ANALYSE_MAX_MS)
+      })
+      const course = analyserCopie(fichier, {
         transport: transportPour({ etat, setEtat, aller }),
         ...(demoId ? { client: clientDemoPour(demoId, { attenteMax: options.attenteMax }) } : {}),
         onProgression: (p) =>
@@ -105,12 +115,23 @@ export function useActionsRature({ etat, setEtat, aller }: Ctx) {
           ...precedent,
           occupe: false,
           erreur: messageErreur(erreur),
-          ecran: 'cadrage',
           ...(amontMort(erreur) ? { santeProxy: 'ko' as const } : {}),
         }))
         return null
       })
-      if (resultat) setEtat((precedent) => ({ ...precedent, occupe: false, resultat, demoId }))
+      const resultat = await Promise.race([course, delaiMax]).finally(() => clearTimeout(vidange))
+      if (resultat) {
+        setEtat((precedent) => ({ ...precedent, occupe: false, resultat, demoId }))
+        return
+      }
+      // Le watchdog a gagné (la course n'a rien renvoyé ni échoué) : on rend
+      // la main. L'analyse continue en arrière-plan : si elle aboutit, le
+      // badge « diagnosis ready » s'allumera quand même (idée 8).
+      setEtat((precedent) => ({
+        ...precedent,
+        occupe: false,
+        erreur: `The model is taking too long (over ${Math.round(DELAI_ANALYSE_MAX_MS / 1000)}s). Try again — or run the offline demo below.`,
+      }))
     },
     [aller, etat.reglages, setEtat],
   )
@@ -245,6 +266,13 @@ export function useActionsRature({ etat, setEtat, aller }: Ctx) {
     [etat.resultat, etat.reglages, etat.demoId, etat.exercicesVus, setEtat, aller],
   )
 
+  /** Reprise après un échec : la même photo, sans re-choisir le fichier. */
+  const reprendreAnalyse = useCallback(async () => {
+    const fichier = etat.dernierFichier
+    if (!fichier) return
+    await analyser(fichier)
+  }, [analyser, etat.dernierFichier])
+
   return {
     analyser,
     analyserDemo,
@@ -255,6 +283,7 @@ export function useActionsRature({ etat, setEtat, aller }: Ctx) {
     viderHistorique,
     reinitialiserErreur,
     nouvelExercice,
+    reprendreAnalyse,
   }
 }
 

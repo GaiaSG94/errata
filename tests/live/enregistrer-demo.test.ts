@@ -32,8 +32,17 @@ import { chaineModeles, construireCorps } from '../../src/pipeline/llm'
 
 const CLE = process.env.INFERHUB_API_KEY ?? ''
 const AMONT = process.env.RATURE_AMONT ?? 'https://api.inferhub.dev/v1'
+/**
+ * Mode proxy : la clé vit côté Worker (jamais ici). On passe alors par le
+ * proxy edge, qui descend lui-même la chaîne de modèles. Sans clé et sans
+ * proxy, l'enregistreur ne s'exécute pas.
+ */
+const PROXY = process.env.RATURE_PROXY_URL ?? ''
+const MODE_PROXY = PROXY !== '' && CLE === ''
 const DELAI_MS = 240_000
-const transport: Transport = { proxy: `${AMONT}/chat/completions` }
+const transport: Transport = MODE_PROXY
+  ? { proxy: PROXY }
+  : { proxy: `${AMONT}/chat/completions` }
 
 /**
  * Copies enregistrées pour la démo : elles sont lues dans `corpus/demo/` (les
@@ -41,14 +50,26 @@ const transport: Transport = { proxy: `${AMONT}/chat/completions` }
  */
 const DOSSIER_DEMO = '../../corpus/demo'
 /** Toutes les copies photo de la démo (cf. corpus/copies-demo.json). */
-const COPIES_DEMO = [
+const TOUTES_COPIES = [
   'copie-demo-1.jpg',
   'copie-demo-2.jpg',
   'copie-demo-3.jpg',
   'copie-demo-4.jpg',
   'copie-demo-5.jpg',
   'copie-demo-6.jpg',
+  'v2-copie-1.jpg',
+  'v2-copie-2.jpg',
+  'v2-copie-3.jpg',
+  'v2-copie-4.jpg',
 ]
+/** Sous-ensemble à enregistrer : `RECORD_COPIES=v2-copie-1,v2-copie-2`. */
+const COPIES_DEMO = process.env.RECORD_COPIES
+  ? TOUTES_COPIES.filter((nom) =>
+      process.env.RECORD_COPIES!.split(',')
+        .map((entree) => entree.trim().replace(/\.(png|jpg)$/, ''))
+        .includes(nom.replace(/\.(png|jpg)$/, '')),
+    )
+  : TOUTES_COPIES
 
 async function appeler(requete: RequeteLLM, modele: string): Promise<string> {
   const reponse = await fetch(`${AMONT}/chat/completions`, {
@@ -64,16 +85,58 @@ async function appeler(requete: RequeteLLM, modele: string): Promise<string> {
   return data.choices?.[0]?.message?.content ?? ''
 }
 
+/** Un appel au proxy edge : la clé reste côté serveur. */
+async function appelerProxy(requete: RequeteLLM, modele: string): Promise<{ texte: string; modele: string }> {
+  const reponse = await fetch(PROXY, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', origin: 'https://gaiasg94.github.io' },
+    body: JSON.stringify(construireCorps(requete, modele)),
+    signal: AbortSignal.timeout(DELAI_MS),
+  })
+  const data = (await reponse.json()) as { texte?: string; modele?: string; erreur?: string }
+  if (!reponse.ok) {
+    throw Object.assign(new Error(data.erreur ?? `proxy HTTP ${reponse.status}`), {
+      statut: reponse.status,
+    })
+  }
+  return { texte: data.texte ?? '', modele: data.modele ?? modele }
+}
+
 const TRANSITOIRES = new Set([402, 429, 500, 502, 503, 504])
+const ESSAIS_PROXY = 6
+const PAUSE_PROXY_MS = 12_000
 
 /** Client réel avec repli sur la chaîne, qui enregistre chaque réponse brute. */
-function clientEnregistreur(brut: Record<string, string[]>, cle: string): ClientBrut {
+function clientEnregistreur(brut: Record<string, string>, cle: string): ClientBrut {
+  if (MODE_PROXY) {
+    // Le proxy descend déjà la chaîne : on réessaie le proxy entier, avec une
+    // pause (un modèle mort est marqué 60 s par le Worker). La dernière bonne
+    // réponse écrase les précédentes : une réponse hors JSON ne reste pas.
+    return async (requete: RequeteLLM) => {
+      let derniere = 'proxy indisponible'
+      for (let essai = 0; essai < ESSAIS_PROXY; essai += 1) {
+        try {
+          const { texte, modele } = await appelerProxy(requete, MODELE_PAR_DEFAUT)
+          brut[cle] = texte
+          modelesRepondus.add(modele)
+          return texte
+        } catch (erreur) {
+          derniere = (erreur as Error).message
+          const statut = (erreur as { statut?: number }).statut ?? 0
+          if (!TRANSITOIRES.has(statut)) throw erreur
+          await new Promise((r) => setTimeout(r, PAUSE_PROXY_MS))
+        }
+      }
+      throw new Error(derniere)
+    }
+  }
   return async (requete: RequeteLLM) => {
     let derniere = 'aucun modèle disponible'
     for (const modele of chaineModeles(transport)) {
       try {
         const texte = await appeler(requete, modele)
-        brut[cle] = [...(brut[cle] ?? []), texte]
+        brut[cle] = texte
+        modelesRepondus.add(modele)
         return texte
       } catch (erreur) {
         if (!TRANSITOIRES.has((erreur as { statut?: number }).statut ?? 0)) throw erreur
@@ -83,6 +146,25 @@ function clientEnregistreur(brut: Record<string, string[]>, cle: string): Client
     throw new Error(derniere)
   }
 }
+
+/** Une étape, rejouée jusqu'à 5 fois : une réponse hors JSON ou un 503 ne tue pas l'enregistrement. */
+async function avecReprise<T>(nom: string, travail: () => Promise<T>): Promise<T> {
+  let derniere: Error | null = null
+  for (let essai = 0; essai < 5; essai += 1) {
+    try {
+      return await travail()
+    } catch (erreur) {
+      derniere = erreur instanceof Error ? erreur : new Error(String(erreur))
+      console.info(`[démo] ${nom} : tentative ${essai + 1} échouée (${derniere.message}), reprise…`)
+      await new Promise((r) => setTimeout(r, PAUSE_PROXY_MS))
+    }
+  }
+  throw derniere ?? new Error('échec sans message')
+}
+
+/** Les modèles qui ont réellement répondu pendant l'enregistrement. */
+const modelesRepondus = new Set<string>()
+
 
 function imageDataUrl(nom: string): string {
   const chemin = fileURLToPath(new URL(`${DOSSIER_DEMO}/${nom}`, import.meta.url))
@@ -98,20 +180,20 @@ function cheminSortie(nom: string): string {
 
 /** Enchaîne le chemin réel du produit sur une copie et écrit les réponses. */
 async function enregistrer(nom: string) {
-  const brut: Record<string, string[]> = {}
+  const brut: Record<string, string> = {}
   // Les durées réelles de chaque étape sont capturées : la démo rejouera ce
   // rythme-là, au lieu d'être instantanée (et donc invraisemblable).
   const durees: Record<string, number> = {}
-  const chrono = async <T>(etape: string, travail: () => Promise<T>): Promise<T> => {
+  const chrono = async <T>(etape: string, nom: string, travail: () => Promise<T>): Promise<T> => {
     const debut = Date.now()
-    const resultat = await travail()
+    const resultat = await avecReprise(nom, travail)
     durees[etape] = Date.now() - debut
     return resultat
   }
-  const { extraction, erreurs } = await chrono('extrait', () =>
+  const { extraction, erreurs } = await chrono('extrait', nom, () =>
     analyserImage(imageDataUrl(nom), transport, clientEnregistreur(brut, 'analyse')),
   )
-  const revue = await chrono('classifie', () =>
+  const revue = await chrono('classifie', nom, () =>
     revoirFautesPeuSures(erreurs, transport, clientEnregistreur(brut, 'revue')),
   )
   const diagnostic = construireDiagnostic(revue.erreurs, { id: nom, createdAt: new Date().toISOString() })
@@ -121,13 +203,15 @@ async function enregistrer(nom: string) {
   if (!propre) expect(diagnostic.typeDominant, `${nom} : aucun type dominant`).toBeTruthy()
 
   if (!propre) {
-    await chrono('genere', () =>
+    await chrono('genere', nom, () =>
       genererExerciceVerifie({
         typeDominant: diagnostic.typeDominant!,
         extraitCopie: extraction.annotations.map((a) => a.ligne).slice(0, 6).join('\n'),
         transport,
         client: async (requete: RequeteLLM) => {
-          const cle = requete.system.includes('Garde-fou') || requete.system.includes('Relevance guardrail') ? 'verdict' : 'exercice'
+          // Le marqueur doit suivre le prompt courant (« Relevance guardrail »),
+          // comme dans `etapeDe` de src/pipeline/demo.ts.
+          const cle = requete.system.includes('Relevance guardrail') ? 'verdict' : 'exercice'
           return clientEnregistreur(brut, cle)(requete)
         },
       }),
@@ -140,20 +224,13 @@ async function enregistrer(nom: string) {
     `${JSON.stringify(
       {
         source: `corpus/demo/${nom}`,
-        modele: MODELE_PAR_DEFAUT,
+        modele: [...modelesRepondus].join(', ') || MODELE_PAR_DEFAUT,
         enregistreLe: new Date().toISOString(),
         dominant: propre ? 'propre' : diagnostic.typeDominant,
         nbFautes: propre ? 0 : diagnostic.nbFautes,
         revues: revue.revues,
         durees,
-        // Dernière réponse de chaque étape, pas la première : le garde-fou peut
-        // refuser un exercice et le pipeline en régénère un second. Rejouer la
-        // première réponse rejouerait un refus, alors que le produit a bien
-        // servi la seconde. Pour les étapes appelées une seule fois, c'est
-        // identique.
-        reponses: Object.fromEntries(
-          Object.entries(brut).map(([cle, liste]) => [cle, liste[liste.length - 1]]),
-        ),
+        reponses: brut,
       },
       null,
       2,
@@ -162,7 +239,7 @@ async function enregistrer(nom: string) {
   return { nom, dominant: propre ? 'propre' : diagnostic.typeDominant, revues: revue.revues }
 }
 
-describe.skipIf(!CLE)('enregistrement du corpus de démo', () => {
+describe.skipIf(!CLE && !MODE_PROXY)('enregistrement du corpus de démo', () => {
   for (const nom of COPIES_DEMO) {
     it(
       `capte analyse, revue, exercice et verdict sur ${nom}`,

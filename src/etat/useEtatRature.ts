@@ -17,6 +17,7 @@ export type Ecran =
   | 'cadrage'
   | 'analyse'
   | 'diagnostic'
+  | 'exemples'
   | 'profil'
   | 'exercice'
   | 'prof'
@@ -28,6 +29,7 @@ export const ECRANS: Ecran[] = [
   'cadrage',
   'analyse',
   'diagnostic',
+  'exemples',
   'profil',
   'exercice',
   'prof',
@@ -58,6 +60,8 @@ export type Etat = {
   messageProgres: string | null
   /** Identifiants des exercices déjà servis (pour en proposer un autre). */
   exercicesVus: string[]
+  /** Dernier fichier analysé : permet un « Try again » sans re-choisir la photo. */
+  dernierFichier: File | null
 }
 
 export function ecranDepuisUrl(): Ecran {
@@ -82,6 +86,7 @@ export function etatInitial(): Etat {
     diagnosticPret: false,
     messageProgres: null,
     exercicesVus: [],
+    dernierFichier: null,
   }
 }
 
@@ -111,7 +116,16 @@ export function transportDe(
 }
 
 export function messageErreur(erreur: unknown): string {
-  return erreur instanceof Error ? erreur.message : 'Analysis failed. Try again in a moment.'
+  if (erreur instanceof Error) {
+    const statut = (erreur as { statut?: number }).statut ?? 0
+    // 503/504 : la place de marché n'a pas de capacité maintenant. Message
+    // honnête + issue de secours (la démo hors ligne ne dépend pas du réseau).
+    if (statut === 503 || statut === 504) {
+      return 'The model provider has no capacity right now. Try again in a moment — or run the offline demo below.'
+    }
+    return erreur.message
+  }
+  return 'Analysis failed. Try again in a moment.'
 }
 
 /** Réseau ou amont épuisé : c'est le signal qui allume la pastille « ko ». */

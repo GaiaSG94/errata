@@ -311,11 +311,17 @@ export async function completer(transport: Transport, requete: RequeteLLM): Prom
   let derniere: ErreurLLM | null = null
   let arreteeParBudget = false
   const echeance = Date.now() + BUDGET_APPEL_MS
-  for (const modele of chaineModeles(transport)) {
+  const chaine = chaineModeles(transport)
+  for (const [index, modele] of chaine.entries()) {
     if (Date.now() > echeance) {
       arreteeParBudget = true
       break
     }
+    // Visibilité : même sans SSE, l'utilisateur sait quel modèle est essayé.
+    // Sans ce message, un amont saturé laisse l'écran bloqué en silence (bug du 15/11).
+    transport.surProgres?.(
+      `trying model ${index + 1}/${chaine.length}: ${modele.split('/').pop() ?? modele}…`,
+    )
     try {
       return await appelerAvecPause(transport, requete, modele)
     } catch (erreur) {
@@ -324,11 +330,12 @@ export async function completer(transport: Transport, requete: RequeteLLM): Prom
       // que multiplier les allers-retours pour le même résultat.
       if (erreur.quotaProxy || erreur.chaineEpuisee || !REESSAYABLES.has(erreur.statut)) throw erreur
       derniere = erreur
+      transport.surProgres?.(messageProgres({ modele, essai: index + 1, statut: erreur.statut }))
     }
   }
   if (arreteeParBudget) {
     throw new ErreurLLM(
-      "L'amont met trop de temps à répondre. Réessaie dans quelques minutes, ou lance la démonstration.",
+      'The model provider is too slow right now. Try again in a moment — or run the offline demo below.',
       504,
     )
   }

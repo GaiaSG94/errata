@@ -1,94 +1,20 @@
 import { Bouton } from '../components/Bouton'
 import { BandeauSante } from '../components/BandeauSante'
 import { Carte } from '../components/Carte'
-import { COPIES_DEMO, COPIES_ECHANTILLON, ID_COPIES_DEMO } from '../../pipeline/demo'
+import { BoardDuo } from '../components/BoardDuo'
+import { COPIES_DEMO, ID_COPIES_DEMO } from '../../pipeline/demo'
 import { useRature } from '../../etat/useRature'
 
-const STEPS = [
-  ['1', 'Normalize', 'deskew'],
-  ['2', 'Mask name', 'private'],
-  ['3', 'Read marks', 'vision'],
-  ['4', 'Classify E01', 'taxonomy'],
-  ['5', 'Aggregate', 'local'],
-  ['6', 'Build drill', 'guarded'],
-] as const
-
-function CopyCard() {
-  return (
-    <div className="errata-journey-card errata-copy-card">
-      <div className="errata-card-bar"><span>Paper 2 · 10B · name hidden</span><span>photo</span></div>
-      <div className="errata-handwriting">
-        <span className="errata-question">(1) Expand (x + 5)²</span>
-        <span>= x² + 10x <span className="errata-mark">− 25</span></span>
-        <span className="sticker sticker-ambre errata-error-sticker">E01 · sign lost · 3rd time</span>
-      </div>
-    </div>
-  )
-}
-
-function DiagnosisCard() {
-  return (
-    <div className="errata-journey-card errata-diagnosis-card">
-      <span className="errata-step-label">2 · Errata finds</span>
-      <strong>E01</strong>
-      <h2>Sign lost</h2>
-      <p>Present in 3 of your last 3 papers.</p>
-      <span className="sticker sticker-ambre">Recurring error</span>
-    </div>
-  )
-}
-
-function DrillCard() {
-  return (
-    <div className="errata-journey-card errata-drill-card">
-      <span className="errata-step-label">3 · You practise</span>
-      <span className="errata-drill-question">Expand (x <b>− 4</b>)²</span>
-      <p>One targeted drill for one recurring gesture.</p>
-      <span className="sticker sticker-menthe">Relevance guard ✓</span>
-    </div>
-  )
-}
+const TITRE = ['Turn', 'your', 'mistakes', 'into', 'moves'] as const
 
 /**
- * Galerie « Tester » : le jury choisit une copie photo et l'application
- * l'analyse pour de vrai. Les copies dont les réponses du modèle sont
- * enregistrées se rejouent hors ligne ; les autres passent par le proxy.
+ * Accueil V9 (maquette Design/rature/accueil-v9.html, section A + C) :
+ * hero corrigé — trois boutons sur une ligne (ambre / blanc / vert), titre mot
+ * à mot avec « moves » en ambre — et bloc de droite = duo C1 (scan live) puis
+ * C5 (téléphone). La galerie de copies vit désormais sur l'écran « Sample
+ * papers » ; les petits boutons de démo du bas disparaissent : « Watch the
+ * demo » les remplace.
  */
-function GalerieEchantillons() {
-  const { analyserEchantillon, occupe } = useRature()
-  return (
-    <section className="errata-test" id="tester">
-      <div className="errata-test-head">
-        <span>Sample papers · written for this demo</span>
-        <span>Pick one → the app analyses it, exactly like a photo</span>
-      </div>
-      <div className="errata-test-row">
-        {COPIES_ECHANTILLON.map((echantillon) => (
-          <button
-            key={echantillon.id}
-            type="button"
-            className="errata-test-card"
-            onClick={() => void analyserEchantillon(echantillon.id)}
-            disabled={occupe}
-          >
-            <img src={echantillon.image} alt={`${echantillon.titre} — ${echantillon.eleve}`} loading="lazy" />
-            <span className="meta">
-              <span className="who">{echantillon.eleve}</span>
-              <span className="sub">
-                {echantillon.devoir} · {echantillon.note}
-              </span>
-              <span className="tag-line">{echantillon.resume}</span>
-              <span className={echantillon.enregistrement ? 'go' : 'go live'}>
-                {echantillon.enregistrement ? 'Tester · offline replay' : 'Tester · live model'}
-              </span>
-            </span>
-          </button>
-        ))}
-      </div>
-    </section>
-  )
-}
-
 export function Accueil() {
   const { aller, profil, analyserDemo, occupe } = useRature()
   const plusieurs = ID_COPIES_DEMO.length > 1
@@ -99,27 +25,28 @@ export function Accueil() {
       <section className="errata-hero">
         <div className="errata-hero-copy">
           <p className="errata-hero-kicker">A study app for students who hate red pen.</p>
-          <h1>Turn your mistakes into <span className="mot-italique">moves</span></h1>
+          <h1>
+            {TITRE.map((mot) => (
+              <span key={mot}>
+                <span className={mot === 'moves' ? 'errata-titre-mot errata-moves' : 'errata-titre-mot'}>
+                  {mot}
+                </span>{' '}
+              </span>
+            ))}
+          </h1>
           <p className="errata-hero-lede">
             Photograph your corrected paper. We read the teacher&apos;s marks, sort them by error type,
             and build the exercise that works on <em>your</em> weakness.
           </p>
-          <div className="errata-hero-actions">
+          <div className="errata-ctas">
             <Bouton onClick={() => aller('cadrage')}>Photograph my paper</Bouton>
             {plusieurs ? (
-              <Bouton
-                variante="secondaire"
-                onClick={() => void analyserDemo(copieGuidee)}
-                disabled={occupe}
-              >
-                Watch the demo · {copieGuidee.length} papers → my profile
+              <Bouton variante="blanc" onClick={() => void analyserDemo(copieGuidee)} disabled={occupe}>
+                Watch the demo
               </Bouton>
             ) : null}
-            <Bouton
-              variante="discret"
-              onClick={() => document.getElementById('tester')?.scrollIntoView({ behavior: 'smooth' })}
-            >
-              Try a sample paper <span>↓</span>
+            <Bouton variante="menthe" onClick={() => aller('exemples')}>
+              Try a sample paper
             </Bouton>
           </div>
           <div className="errata-proof-stickers" aria-hidden="true">
@@ -128,42 +55,25 @@ export function Accueil() {
           </div>
         </div>
 
-        <div className="errata-journey" aria-label="How Errata works">
-          <div className="errata-journey-heading"><span>How Errata works</span><span>paper → practice</span></div>
-          <div className="errata-journey-flow">
-            <CopyCard />
-            <span className="errata-journey-arrow" aria-hidden="true">→</span>
-            <DiagnosisCard />
-            <span className="errata-journey-arrow" aria-hidden="true">→</span>
-            <DrillCard />
-          </div>
-          <div className="errata-steps" aria-label="Six analysis steps">
-            {STEPS.map(([number, label, meta]) => (
-              <div className={number === '4' ? 'errata-pipeline-step is-hot' : 'errata-pipeline-step'} key={number}>
-                <span>{number}</span><strong>{label}</strong><small>{meta}</small>
-              </div>
-            ))}
-          </div>
-        </div>
+        <BoardDuo />
       </section>
 
       <div className="errata-home-lower">
-        <GalerieEchantillons />
         <BandeauSante />
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <p className="text-sm text-white/90">No paper is ever stored. Your history stays on your device.</p>
-          <div className="flex flex-wrap gap-2">
-            <Bouton variante="discret" onClick={() => void analyserDemo()} disabled={occupe}>Run the demo (one paper, real timings)</Bouton>
-            {plusieurs ? <Bouton variante="discret" onClick={() => void analyserDemo(ID_COPIES_DEMO)} disabled={occupe}>Full demo ({ID_COPIES_DEMO.length} papers, sped up)</Bouton> : null}
-          </div>
-        </div>
-        <p className="text-center text-xs text-white/75">Model answers recorded on {COPIES_DEMO.length} sample paper(s) · offline replay keeps real answer order and timings (the full guided tour is sped up) · no key.</p>
         {profil.totalAnalyses > 0 ? (
           <Carte titre="Continue" ton="vert">
             <p className="text-sm text-muet">{profil.totalAnalyses} paper(s) analysed on this device.</p>
-            <div className="mt-3"><Bouton variante="secondaire" onClick={() => aller('profil')}>See my error profile</Bouton></div>
+            <div className="mt-3">
+              <Bouton variante="secondaire" onClick={() => aller('profil')}>
+                See my error profile
+              </Bouton>
+            </div>
           </Carte>
         ) : null}
+        <p className="text-center text-xs text-white/75">
+          Model answers recorded on {COPIES_DEMO.length} sample paper(s) · replayable offline · no key
+          · no paper ever stored.
+        </p>
       </div>
     </div>
   )

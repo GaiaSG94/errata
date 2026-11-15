@@ -3,13 +3,12 @@ import type { Ecran } from '../../etat/useRature'
 
 const LIENS: { ecran: Ecran; libelle: string }[] = [
   { ecran: 'accueil', libelle: 'Paper' },
-  // Entrée directe : sans elle, le diagnostic et l'exercice n'étaient atteignables
-  // qu'en sortant d'une analyse — invisibles après la démonstration complète.
-  { ecran: 'diagnostic', libelle: 'Diagnosis' },
+  // V9 : navigation réduite à 4 entrées. « Diagnosis » n'est pas un onglet :
+  // on y arrive après une analyse, et le badge « Diagnosis ready » de
+  // l'en-tête y mène. Réglages reste accessible via l'icône ⚙.
   { ecran: 'profil', libelle: 'Profile' },
   { ecran: 'prof', libelle: 'Teacher' },
   { ecran: 'apropos', libelle: 'How it works' },
-  { ecran: 'reglages', libelle: 'Settings' },
 ]
 
 /** Badge discret : l'analyse continue pendant que l'utilisateur navigue. */
@@ -53,7 +52,7 @@ export function Entete() {
         errata!
       </button>
       <BadgeAnalyse />
-      <nav aria-label="Main navigation" className="flex flex-wrap gap-1">
+      <nav aria-label="Main navigation" className="flex flex-wrap items-center gap-1">
         {LIENS.map((lien) => (
           <button
             key={lien.ecran}
@@ -68,6 +67,19 @@ export function Entete() {
             {lien.libelle}
           </button>
         ))}
+        <button
+          type="button"
+          onClick={() => aller('reglages')}
+          aria-label="Settings"
+          title="Settings"
+          aria-current={ecran === 'reglages' ? 'page' : undefined}
+          className={[
+            'rounded-full px-2.5 py-1.5 text-sm transition',
+            ecran === 'reglages' ? 'bg-texte text-fond' : 'text-white/80 hover:text-white',
+          ].join(' ')}
+        >
+          ⚙
+        </button>
       </nav>
     </header>
   )

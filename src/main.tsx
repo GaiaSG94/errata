@@ -1,6 +1,7 @@
 import { createRoot } from 'react-dom/client'
 import { StrictMode } from 'react'
 import './styles.css'
+import './v9.css'
 import { Application } from './ui/App'
 import { RatureProvider } from './etat/useRature'
 

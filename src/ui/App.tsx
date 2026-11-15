@@ -3,6 +3,7 @@ import { CommentCaMarche } from './screens/CommentCaMarche'
 import { Analyse } from './screens/Analyse'
 import { Cadrage } from './screens/Cadrage'
 import { Diagnostic } from './screens/Diagnostic'
+import { Exemples } from './screens/Exemples'
 import { Exercice } from './screens/Exercice'
 import { Prof } from './screens/Prof'
 import { Profil } from './screens/Profil'
@@ -18,6 +19,7 @@ const ECRANS: Record<Ecran, () => JSX.Element> = {
   cadrage: Cadrage,
   analyse: Analyse,
   diagnostic: Diagnostic,
+  exemples: Exemples,
   profil: Profil,
   exercice: Exercice,
   prof: Prof,

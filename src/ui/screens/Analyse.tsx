@@ -11,7 +11,18 @@ import { useRature } from '../../etat/useRature'
  * Presentation), et le budget annoncé est celui du cahier des charges.
  */
 export function Analyse() {
-  const { progression, erreur, occupe, aller, messageProgres, modeleRepondu, demoId } = useRature()
+  const {
+    progression,
+    erreur,
+    occupe,
+    aller,
+    messageProgres,
+    modeleRepondu,
+    demoId,
+    reprendreAnalyse,
+    dernierFichier,
+    analyserDemo,
+  } = useRature()
   const demo = demoId ? origineDemo(demoId) : null
   return (
     <div className="space-y-5">
@@ -48,7 +59,21 @@ export function Analyse() {
         <p className="text-xs text-muet">Answered by {modeleRepondu.split('/').pop()}</p>
       ) : null}
 
-      {erreur ? <p role="alert" className="text-sm text-jaune">{erreur}</p> : null}
+      {erreur && !occupe ? (
+        <div role="alert" className="space-y-3 rounded-xl border border-jaune/60 bg-surface-2 p-4">
+          <p className="text-sm text-jaune">{erreur}</p>
+          <div className="flex flex-wrap gap-3">
+            {dernierFichier ? (
+              <Bouton variante="secondaire" onClick={() => void reprendreAnalyse()}>
+                Try again
+              </Bouton>
+            ) : null}
+            <Bouton variante="discret" onClick={() => void analyserDemo()}>
+              Run the offline demo (recorded answers, no network)
+            </Bouton>
+          </div>
+        </div>
+      ) : null}
       {!occupe && !erreur ? <p className="text-sm text-muet">Loading the result…</p> : null}
     </div>
   )
