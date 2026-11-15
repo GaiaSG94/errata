@@ -48,7 +48,7 @@ export function Entete() {
       <button
         type="button"
         onClick={() => aller('accueil')}
-        className="font-[family-name:var(--font-etroite)] text-2xl font-bold italic tracking-tight text-texte"
+        className="font-[family-name:var(--font-etroite)] text-2xl font-bold italic tracking-tight text-white"
       >
         errata!
       </button>
@@ -62,7 +62,7 @@ export function Entete() {
             aria-current={ecran === lien.ecran ? 'page' : undefined}
             className={[
               'rounded-full px-3 py-1.5 text-sm font-medium transition',
-              ecran === lien.ecran ? 'bg-texte text-fond' : 'text-muet hover:text-texte',
+              ecran === lien.ecran ? 'bg-texte text-fond' : 'text-white/80 hover:text-white',
             ].join(' ')}
           >
             {lien.libelle}

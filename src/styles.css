@@ -154,8 +154,7 @@ body {
 
 .errata-home {
   --errata-ink: var(--color-texte);
-  margin: -1.25rem -1rem -1.25rem;
-  padding: 0 1rem 1.5rem;
+  padding: 0 0 1.5rem;
   background: var(--color-bleu);
   color: white;
   position: relative;
@@ -518,6 +517,17 @@ body {
 
 .errata-home-lower > .rounded-xl {
   background: var(--color-surface);
+}
+
+/* Écrans internes : une feuille de papier posée sur le bureau bleu. L'accueil
+   reste à même le bureau (son .errata-home est exclu). */
+main.errata-zone > :not(.errata-home) {
+  background: var(--color-fond);
+  border: 3px solid var(--color-texte);
+  border-radius: 1.25rem;
+  box-shadow: 8px 8px 0 var(--color-texte);
+  padding: 1.75rem;
+  color: var(--color-texte);
 }
 
 @media (max-width: 900px) {
